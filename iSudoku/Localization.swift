@@ -1,0 +1,149 @@
+import Foundation
+import Combine
+
+enum Lang: String {
+    case pt, en
+}
+
+/// Tiny map-backed localizer, defaulting to Portuguese and persisted via UserDefaults.
+/// Published so SwiftUI recomposes automatically when the language toggles.
+final class Localization: ObservableObject {
+    static let shared = Localization()
+
+    @Published var lang: Lang {
+        didSet { UserDefaults.standard.set(lang.rawValue, forKey: "isudoku-lang") }
+    }
+
+    private init() {
+        if let stored = UserDefaults.standard.string(forKey: "isudoku-lang"), let l = Lang(rawValue: stored) {
+            lang = l
+        } else {
+            lang = .pt
+        }
+    }
+
+    func toggle() {
+        lang = lang == .pt ? .en : .pt
+    }
+
+    func t(_ key: String) -> String {
+        strings[lang]?[key] ?? key
+    }
+
+    private let strings: [Lang: [String: String]] = [
+        .pt: [
+            "tapToContinue": "Toque para continuar",
+            "developedBy": "Desenvolvido por",
+
+            "menuTag": "PUZZLE DE LÓGICA",
+            "menuSubtitle": "Preenche a grelha 9x9. Sem repetições em linhas, colunas ou blocos.",
+            "sudokuTag": "SUDOKU",
+            "play": "Jogar",
+            "continueGame": "Continuar",
+            "howToPlay": "Como Jogar",
+
+            "difficultyLabel": "Dificuldade",
+            "easy": "Fácil",
+            "medium": "Médio",
+            "hard": "Difícil",
+
+            "notes": "Notas",
+            "erase": "Apagar",
+            "newGame": "Novo Jogo",
+            "hint": "Dica",
+            "undo": "Anular",
+            "restart": "Reiniciar",
+            "time": "Tempo",
+            "moves": "Jogadas",
+            "hintsLeft": "Dicas",
+            "noHintsLeft": "Sem mais dicas disponíveis.",
+            "nothingToUndo": "Nada para anular.",
+
+            "winTitle": "Grelha Completa!",
+            "winSubtitle": "Resolveste o puzzle com sucesso.",
+            "playAgain": "Jogar Novamente",
+            "backToMenu": "Voltar ao Menu",
+            "bestTime": "Melhor Tempo",
+            "bestHints": "Menos Dicas",
+            "newRecordTime": "Novo recorde!",
+            "newRecordHints": "Novo recorde!",
+
+            "confirmRestartTitle": "Reiniciar Puzzle?",
+            "confirmRestartBody": "Vais perder o progresso atual neste puzzle.",
+            "confirm": "Confirmar",
+            "cancel": "Cancelar",
+
+            "htpTitle": "Como Jogar",
+            "htpIntro": "O objetivo é preencher a grelha 9x9 com os números de 1 a 9.",
+            "htpRuleTitle": "A Regra",
+            "htpRuleBody": "Cada linha, cada coluna e cada bloco 3x3 tem de conter todos os números de 1 a 9, sem repetições.",
+            "htpGivenTitle": "Números Fixos",
+            "htpGivenBody": "Os números já preenchidos no início são fixos e não podem ser alterados. Os restantes são preenchidos por ti.",
+            "htpConflictTitle": "Conflitos",
+            "htpConflictBody": "Se colocares um número que já existe na mesma linha, coluna ou bloco, essas células ficam destacadas a vermelho.",
+            "htpNotesTitle": "Notas",
+            "htpNotesBody": "Ativa o modo notas para marcar candidatos possíveis numa célula, em vez de preencher um valor definitivo.",
+            "htpToolsTitle": "Ferramentas",
+            "htpHintTool": "Dica — revela o valor correto de uma célula. Limitado por jogo.",
+            "htpUndoTool": "Anular — desfaz a tua última jogada.",
+            "htpCloseButton": "Entendido",
+        ],
+        .en: [
+            "tapToContinue": "Tap to continue",
+            "developedBy": "Developed by",
+
+            "menuTag": "LOGIC PUZZLE",
+            "menuSubtitle": "Fill the 9x9 grid. No repeats in any row, column or box.",
+            "sudokuTag": "SUDOKU",
+            "play": "Play",
+            "continueGame": "Continue",
+            "howToPlay": "How to Play",
+
+            "difficultyLabel": "Difficulty",
+            "easy": "Easy",
+            "medium": "Medium",
+            "hard": "Hard",
+
+            "notes": "Notes",
+            "erase": "Erase",
+            "newGame": "New Game",
+            "hint": "Hint",
+            "undo": "Undo",
+            "restart": "Restart",
+            "time": "Time",
+            "moves": "Moves",
+            "hintsLeft": "Hints",
+            "noHintsLeft": "No more hints available.",
+            "nothingToUndo": "Nothing to undo.",
+
+            "winTitle": "Grid Complete!",
+            "winSubtitle": "You solved the puzzle.",
+            "playAgain": "Play Again",
+            "backToMenu": "Back to Menu",
+            "bestTime": "Best Time",
+            "bestHints": "Fewest Hints",
+            "newRecordTime": "New record!",
+            "newRecordHints": "New record!",
+
+            "confirmRestartTitle": "Restart Puzzle?",
+            "confirmRestartBody": "You'll lose your current progress on this puzzle.",
+            "confirm": "Confirm",
+            "cancel": "Cancel",
+
+            "htpTitle": "How to Play",
+            "htpIntro": "The goal is to fill the 9x9 grid with the digits 1 through 9.",
+            "htpRuleTitle": "The Rule",
+            "htpRuleBody": "Every row, every column and every 3x3 box must contain each digit from 1 to 9 exactly once.",
+            "htpGivenTitle": "Given Numbers",
+            "htpGivenBody": "Numbers already filled in at the start are fixed and cannot be changed. The rest are yours to fill.",
+            "htpConflictTitle": "Conflicts",
+            "htpConflictBody": "If you place a number that already exists in the same row, column or box, those cells are highlighted in red.",
+            "htpNotesTitle": "Notes",
+            "htpNotesBody": "Turn on notes mode to pencil in possible candidates for a cell, instead of committing a final value.",
+            "htpToolsTitle": "Tools",
+            "htpHintTool": "Hint — reveals the correct value for a cell. Limited per game.",
+            "htpUndoTool": "Undo — reverts your last move.",
+            "htpCloseButton": "Got It",
+        ],
+    ]
+}
