@@ -115,7 +115,7 @@ struct HowToPlayView: View {
     private func toolRow(_ title: String, _ body: String) -> some View {
         HStack(alignment: .top, spacing: 6) {
             Text(title).font(.system(size: 14, weight: .bold)).foregroundColor(Theme.text)
-            Text("— " + body).font(.system(size: 14)).foregroundColor(Theme.textDim)
+            Text(": " + body).font(.system(size: 14)).foregroundColor(Theme.textDim)
         }
     }
 }

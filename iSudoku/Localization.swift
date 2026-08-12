@@ -84,8 +84,8 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notas",
             "htpNotesBody": "Ativa o modo notas para marcar candidatos possíveis numa célula, em vez de preencher um valor definitivo.",
             "htpToolsTitle": "Ferramentas",
-            "htpHintTool": "Dica — revela o valor correto de uma célula. Limitado por jogo.",
-            "htpUndoTool": "Anular — desfaz a tua última jogada.",
+            "htpHintTool": "Dica: revela o valor correto de uma célula. Limitado por jogo.",
+            "htpUndoTool": "Anular: desfaz a tua última jogada.",
             "htpCloseButton": "Entendido",
         ],
         .en: [
@@ -141,8 +141,8 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notes",
             "htpNotesBody": "Turn on notes mode to pencil in possible candidates for a cell, instead of committing a final value.",
             "htpToolsTitle": "Tools",
-            "htpHintTool": "Hint — reveals the correct value for a cell. Limited per game.",
-            "htpUndoTool": "Undo — reverts your last move.",
+            "htpHintTool": "Hint: reveals the correct value for a cell. Limited per game.",
+            "htpUndoTool": "Undo: reverts your last move.",
             "htpCloseButton": "Got It",
         ],
     ]

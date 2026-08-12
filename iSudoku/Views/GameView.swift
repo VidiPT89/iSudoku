@@ -67,8 +67,8 @@ struct GameView: View {
                 WinModalView(
                     time: formattedTime(engine.elapsedSeconds),
                     hintsUsed: engine.hintsUsed,
-                    bestTime: recordEntry.bestTimeSeconds.map(formattedTime) ?? "—",
-                    bestHints: recordEntry.bestHints.map { "\($0)" } ?? "—",
+                    bestTime: recordEntry.bestTimeSeconds.map(formattedTime) ?? "–",
+                    bestHints: recordEntry.bestHints.map { "\($0)" } ?? "–",
                     isNewBestTime: isNewBestTime,
                     isNewBestHints: isNewBestHints,
                     onPlayAgain: { performRestart() },
