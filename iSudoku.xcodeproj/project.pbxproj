@@ -7,6 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		03CE01BF01CE01BF01CE01BF /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CE01BF01CE01BF01CE01BF /* Challenge.swift */; };
+		04CE01BF01CE01BF01CE01BF /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = 01CE01BF01CE01BF01CE01BF /* Challenge.swift */; };
+		05CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift */; };
+		06CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 02CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift */; };
 		074B2DBCABE72F2EBE3CA2D4 /* iSudokuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E1AAE334BFDEFA9F5732AD /* iSudokuApp.swift */; };
 		0A77B78AABCEC284FF876F29 /* NumberPadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC9E871C25817BC05883A50 /* NumberPadView.swift */; };
 		14B3EB952239270756285E9D /* Localization.swift in Sources */ = {isa = PBXBuildFile; fileRef = 9763DC981C8564C43799B428 /* Localization.swift */; };
@@ -50,6 +54,8 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		01CE01BF01CE01BF01CE01BF /* Challenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Challenge.swift; sourceTree = "<group>"; };
+		02CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesScreen.swift; sourceTree = "<group>"; };
 		0CC9E871C25817BC05883A50 /* NumberPadView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NumberPadView.swift; sourceTree = "<group>"; };
 		2A5FB121A27D064E89E6C8EE /* Modals.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Modals.swift; sourceTree = "<group>"; };
 		2DEC92C534C453FABD442F72 /* SudokuCell.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuCell.swift; sourceTree = "<group>"; };
@@ -79,6 +85,7 @@
 			isa = PBXGroup;
 			children = (
 				E282A9A69843204872E9AA5F /* BackgroundGlow.swift */,
+				02CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift */,
 				8F60A27755E0947F8AF7EFC5 /* GameView.swift */,
 				59E8FAC7740288250F98313A /* HowToPlayView.swift */,
 				BD46A49696AFAA08E9C56453 /* MainMenuView.swift */,
@@ -119,6 +126,7 @@
 		9D8EBBEEC7D12636D5E6FABB /* Engine */ = {
 			isa = PBXGroup;
 			children = (
+				01CE01BF01CE01BF01CE01BF /* Challenge.swift */,
 				C562933BB2C04E0FEFB0E181 /* GameEngine.swift */,
 				A480C1F09716C30AFF364F68 /* Leaderboard.swift */,
 				F67FC43A563377BB4D5C6858 /* SaveStore.swift */,
@@ -244,6 +252,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				B3D935DF250ED565E097CCC3 /* BackgroundGlow.swift in Sources */,
+				03CE01BF01CE01BF01CE01BF /* Challenge.swift in Sources */,
+				05CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift in Sources */,
 				66872124209380454D22C0CC /* GameEngine.swift in Sources */,
 				8FF06883F4F936E41482401E /* GameView.swift in Sources */,
 				7F251C987E49387AAAE7CA6D /* HowToPlayView.swift in Sources */,
@@ -270,6 +280,8 @@
 			buildActionMask = 2147483647;
 			files = (
 				6BC4E3F6D9B9C9D5AA8FF7C9 /* BackgroundGlow.swift in Sources */,
+				04CE01BF01CE01BF01CE01BF /* Challenge.swift in Sources */,
+				06CE02CE02CE02CE02CE02CE /* ChallengesScreen.swift in Sources */,
 				930B1C3F0BFA5A2F217FA5FC /* GameEngine.swift in Sources */,
 				2B616928C36B797833D9510F /* GameView.swift in Sources */,
 				4543421C783F6B451A586504 /* HowToPlayView.swift in Sources */,
