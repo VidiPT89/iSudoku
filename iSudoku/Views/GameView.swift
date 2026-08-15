@@ -19,7 +19,6 @@ struct GameView: View {
     @State private var recordEntry: LeaderboardEntry = LeaderboardEntry(bestTimeSeconds: nil, bestHints: nil)
     @State private var isNewBestTime = false
     @State private var isNewBestHints = false
-    @State private var running = true
     @State private var challengeOutcome: ChallengeOutcome? = nil
     @State private var challengeStars = 0
 
@@ -227,7 +226,6 @@ struct GameView: View {
             showToast(loc.t("noHintsLeft"))
         case .won:
             SoundManager.win()
-            running = false
             SaveStore.clear()
             if let level = engine.challengeLevel {
                 let elapsed = engine.elapsedSeconds
