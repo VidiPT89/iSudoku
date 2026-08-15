@@ -31,7 +31,15 @@ final class GameEngine: ObservableObject {
     @Published private(set) var notesMode = false
     @Published private(set) var moves = 0
     @Published private(set) var hintsUsed = 0
+    @Published private(set) var wrongMoves = 0
+    @Published private(set) var challengeLevel: Int? = nil
     private(set) var startedAt = Date()
+
+    var isChallenge: Bool { challengeLevel != nil }
+    var maxHints: Int {
+        if let level = challengeLevel { return maxHintsForLevel(level) }
+        return difficulty.maxHints
+    }
 
     private var givenMask = [Bool](repeating: false, count: 81)
     private var solution = [Int](repeating: 0, count: 81)
@@ -39,7 +47,7 @@ final class GameEngine: ObservableObject {
     private var notes = [Set<Int>](repeating: [], count: 81)
     private var undoStack: [UndoEntry] = []
 
-    var hintsRemaining: Int { difficulty.maxHints - hintsUsed }
+    var hintsRemaining: Int { maxHints - hintsUsed }
     var canUndo: Bool { !undoStack.isEmpty }
 
     var elapsedSeconds: Double {
@@ -57,7 +65,21 @@ final class GameEngine: ObservableObject {
 
     func reset(difficulty newDifficulty: Difficulty) {
         let generated = SudokuGenerator.generate(newDifficulty)
+        applyGenerated(generated, difficulty: newDifficulty, level: nil)
+    }
+
+    /// Start a fresh Challenge-mode puzzle at the given ladder level. Clue count and hint budget
+    /// come from the ramp; the mapped Difficulty is only kept so classic UI paths (leaderboard
+    /// tags, digit-remaining pad) keep working unchanged.
+    func resetChallenge(level: Int) {
+        let band = bandForLevel(level)
+        let generated = SudokuGenerator.generate(band, targetClues: cluesForLevel(level))
+        applyGenerated(generated, difficulty: band, level: level)
+    }
+
+    private func applyGenerated(_ generated: GeneratedPuzzle, difficulty newDifficulty: Difficulty, level: Int?) {
         difficulty = newDifficulty
+        challengeLevel = level
         givenMask = generated.given.map { $0 != 0 }
         solution = generated.solution
         values = generated.given
@@ -67,6 +89,7 @@ final class GameEngine: ObservableObject {
         notesMode = false
         moves = 0
         hintsUsed = 0
+        wrongMoves = 0
         startedAt = Date()
         rebuildCells()
     }
@@ -112,6 +135,7 @@ final class GameEngine: ObservableObject {
         values[index] = digit
         notes[index].removeAll()
         moves += 1
+        if digit != solution[index] { wrongMoves += 1 }
         rebuildCells()
         return isWon ? .won : .digitEntered(index: index, digit: digit)
     }
@@ -146,7 +170,7 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func hint() -> SudokuResult {
-        guard hintsUsed < difficulty.maxHints else { return .hintExhausted }
+        guard hintsUsed < maxHints else { return .hintExhausted }
 
         let target: Int
         if let selected = selectedIndex, !givenMask[selected], values[selected] != solution[selected] {
@@ -193,12 +217,15 @@ final class GameEngine: ObservableObject {
             notesMode: notesMode,
             moves: moves,
             hintsUsed: hintsUsed,
+            wrongMoves: wrongMoves,
+            challengeLevel: challengeLevel,
             elapsedSeconds: elapsedSeconds
         )
     }
 
     func restore(from snapshot: SudokuSnapshot) {
         difficulty = Difficulty(rawValue: snapshot.difficulty) ?? .easy
+        challengeLevel = snapshot.challengeLevel
         givenMask = snapshot.given.map { $0 != 0 }
         solution = snapshot.solution
         values = snapshot.values
@@ -208,6 +235,7 @@ final class GameEngine: ObservableObject {
         notesMode = snapshot.notesMode
         moves = snapshot.moves
         hintsUsed = snapshot.hintsUsed
+        wrongMoves = snapshot.wrongMoves ?? 0
         startedAt = Date().addingTimeInterval(-snapshot.elapsedSeconds)
         rebuildCells()
     }
@@ -223,5 +251,7 @@ struct SudokuSnapshot: Codable {
     var notesMode: Bool
     var moves: Int
     var hintsUsed: Int
+    var wrongMoves: Int? = nil
+    var challengeLevel: Int? = nil
     var elapsedSeconds: Double
 }

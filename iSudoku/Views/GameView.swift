@@ -1,7 +1,7 @@
 import SwiftUI
 
 private enum ModalKind {
-    case none, win, confirmRestart
+    case none, win, challengeWin, confirmRestart
 }
 
 struct GameView: View {
@@ -9,6 +9,9 @@ struct GameView: View {
     @ObservedObject var engine: GameEngine
     let onExit: () -> Void
     let onNewGame: () -> Void
+    var onNextChallenge: () -> Void = {}
+    var onChallengeLevels: () -> Void = {}
+    var onChallengeWin: (_ level: Int, _ stars: Int, _ elapsedSeconds: Double) -> Void = { _, _, _ in }
 
     @State private var modal: ModalKind = .none
     @State private var toastMessage: String?
@@ -17,6 +20,8 @@ struct GameView: View {
     @State private var isNewBestTime = false
     @State private var isNewBestHints = false
     @State private var running = true
+    @State private var challengeOutcome: ChallengeOutcome? = nil
+    @State private var challengeStars = 0
 
     var body: some View {
         ZStack {
@@ -74,6 +79,18 @@ struct GameView: View {
                     onPlayAgain: { performRestart() },
                     onMenu: { modal = .none; onExit() }
                 ).zIndex(600)
+            case .challengeWin:
+                ChallengeWinModalView(
+                    level: engine.challengeLevel ?? 0,
+                    stars: challengeStars,
+                    bestStars: challengeOutcome?.bestStars ?? challengeStars,
+                    time: formattedTime(engine.elapsedSeconds),
+                    bestTime: formattedTime(challengeOutcome?.bestTimeSeconds ?? engine.elapsedSeconds),
+                    isNewBestTime: challengeOutcome?.isNewBestTime ?? false,
+                    unlockedNext: challengeOutcome?.unlockedNext ?? false,
+                    onNextLevel: { modal = .none; onNextChallenge() },
+                    onLevels: { modal = .none; onChallengeLevels() }
+                ).zIndex(600)
             case .confirmRestart:
                 ConfirmModalView(
                     title: loc.t("confirmRestartTitle"),
@@ -101,6 +118,9 @@ struct GameView: View {
             .buttonStyle(.plain)
 
             HStack(spacing: 0) {
+                if let level = engine.challengeLevel {
+                    statGroup(loc.t("level")) { Text("\(level)") }
+                }
                 statGroup(loc.t("time")) {
                     TimelineView(.periodic(from: .now, by: 1)) { _ in
                         Text(formattedTime(engine.elapsedSeconds))
@@ -208,16 +228,25 @@ struct GameView: View {
         case .won:
             SoundManager.win()
             running = false
-            let outcome = Leaderboard.recordCompletion(
-                difficulty: engine.difficulty,
-                timeSeconds: engine.elapsedSeconds,
-                hintsUsed: engine.hintsUsed
-            )
-            recordEntry = outcome.entry
-            isNewBestTime = outcome.newBestTime
-            isNewBestHints = outcome.newBestHints
             SaveStore.clear()
-            withAnimation(Theme.ease) { modal = .win }
+            if let level = engine.challengeLevel {
+                let elapsed = engine.elapsedSeconds
+                let stars = starsFor(wrongMoves: engine.wrongMoves, hintsUsed: engine.hintsUsed)
+                challengeStars = stars
+                challengeOutcome = ChallengeStore().recordWin(level: level, elapsedSeconds: elapsed, stars: stars)
+                onChallengeWin(level, stars, elapsed)
+                withAnimation(Theme.ease) { modal = .challengeWin }
+            } else {
+                let outcome = Leaderboard.recordCompletion(
+                    difficulty: engine.difficulty,
+                    timeSeconds: engine.elapsedSeconds,
+                    hintsUsed: engine.hintsUsed
+                )
+                recordEntry = outcome.entry
+                isNewBestTime = outcome.newBestTime
+                isNewBestHints = outcome.newBestHints
+                withAnimation(Theme.ease) { modal = .win }
+            }
         case .cellSelected, .ignored:
             break
         }

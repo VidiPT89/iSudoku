@@ -22,7 +22,7 @@ enum SudokuGenerator {
         return false
     }
 
-    static func generate(_ difficulty: Difficulty, seed: UInt64? = nil) -> GeneratedPuzzle {
+    static func generate(_ difficulty: Difficulty, targetClues: Int? = nil, seed: UInt64? = nil) -> GeneratedPuzzle {
         var full = [Int](repeating: 0, count: 81)
         _ = fillGrid(&full)
         let solution = full
@@ -30,9 +30,10 @@ enum SudokuGenerator {
         var puzzle = full
         var clues = 81
         let order = (0..<81).shuffled()
+        let floor = targetClues ?? difficulty.minClues
 
         for idx in order {
-            if clues <= difficulty.minClues { break }
+            if clues <= floor { break }
             let backup = puzzle[idx]
             if backup == 0 { continue }
             puzzle[idx] = 0

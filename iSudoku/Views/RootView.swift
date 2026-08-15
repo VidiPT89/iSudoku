@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppScreen {
-    case splash, menu, howToPlay, game
+    case splash, menu, howToPlay, game, levels
 }
 
 final class DifficultyStore: ObservableObject {
@@ -24,6 +24,9 @@ struct RootView: View {
     @StateObject private var difficultyStore = DifficultyStore()
     @State private var screen: AppScreen = .splash
     @State private var hasSave = SaveStore.hasSave()
+    @State private var challengeProgress = ChallengeStore().load()
+
+    private let challengeStore = ChallengeStore()
 
     var body: some View {
         ZStack {
@@ -36,19 +39,36 @@ struct RootView: View {
                     selectedDifficulty: $difficultyStore.value,
                     onPlay: { startNewGame() },
                     onContinue: { continueGame() },
+                    onChallenges: { openLevels() },
                     onHowToPlay: { withAnimation(Theme.ease) { screen = .howToPlay } }
                 )
             case .howToPlay:
                 HowToPlayView(onClose: { withAnimation(Theme.ease) { screen = .menu } })
+            case .levels:
+                ChallengesScreen(
+                    progress: challengeProgress,
+                    onBack: { withAnimation(Theme.ease) { screen = .menu } },
+                    onPickLevel: { startChallenge($0) }
+                )
             case .game:
                 GameView(
                     engine: engine,
                     onExit: {
                         SaveStore.save(engine)
                         hasSave = true
-                        withAnimation(Theme.ease) { screen = .menu }
+                        let dest: AppScreen = engine.isChallenge ? .levels : .menu
+                        withAnimation(Theme.ease) { screen = dest }
                     },
-                    onNewGame: { startNewGame() }
+                    onNewGame: { restartCurrent() },
+                    onNextChallenge: {
+                        let next = (engine.challengeLevel ?? 0) + 1
+                        startChallenge(next)
+                    },
+                    onChallengeLevels: { openLevels() },
+                    onChallengeWin: { _, _, _ in
+                        // GameView already persisted via ChallengeStore; just refresh our copy.
+                        challengeProgress = challengeStore.load()
+                    }
                 )
             }
         }
@@ -74,5 +94,26 @@ struct RootView: View {
             engine.reset(difficulty: difficultyStore.value)
         }
         withAnimation(Theme.ease) { screen = .game }
+    }
+
+    private func openLevels() {
+        challengeProgress = challengeStore.load()
+        withAnimation(Theme.ease) { screen = .levels }
+    }
+
+    private func startChallenge(_ level: Int) {
+        withAnimation(Theme.ease) { engine.resetChallenge(level: level) }
+        SaveStore.clear()
+        hasSave = false
+        withAnimation(Theme.ease) { screen = .game }
+    }
+
+    private func restartCurrent() {
+        if let level = engine.challengeLevel {
+            engine.resetChallenge(level: level)
+        } else {
+            engine.reset(difficulty: difficultyStore.value)
+        }
+        SaveStore.clear()
     }
 }

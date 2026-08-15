@@ -13,13 +13,14 @@ struct SudokuCell: Identifiable, Codable, Equatable {
 }
 
 enum Difficulty: String, CaseIterable, Codable {
-    case easy, medium, hard
+    case easy, medium, hard, expert
 
     var minClues: Int {
         switch self {
         case .easy: return 40
         case .medium: return 32
         case .hard: return 26
+        case .expert: return 23
         }
     }
 
@@ -28,6 +29,7 @@ enum Difficulty: String, CaseIterable, Codable {
         case .easy: return 45
         case .medium: return 36
         case .hard: return 30
+        case .expert: return 25
         }
     }
 
@@ -36,6 +38,7 @@ enum Difficulty: String, CaseIterable, Codable {
         case .easy: return 3
         case .medium: return 4
         case .hard: return 5
+        case .expert: return 5
         }
     }
 }
