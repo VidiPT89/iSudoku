@@ -100,7 +100,10 @@ struct GhostButtonStyle: ButtonStyle {
             .foregroundColor(Theme.textDim)
             .frame(maxWidth: 340)
             .padding(.vertical, 12)
-            .background(configuration.isPressed ? Theme.bgPanel : Color.clear)
-            .cornerRadius(Theme.radius)
+            .background(
+                RoundedRectangle(cornerRadius: Theme.radius)
+                    .fill(configuration.isPressed ? Theme.bgPanel : Color.clear)
+                    .overlay(RoundedRectangle(cornerRadius: Theme.radius).stroke(Theme.border, lineWidth: 1))
+            )
     }
 }

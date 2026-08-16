@@ -17,7 +17,7 @@ private let challengeCluesPerLevel = 0.55
 
 /// How much of the ladder the level picker keeps on screen at once.
 let challengeLevelsBehind = 30
-let challengeLevelsAhead = 5
+let challengeLevelsAhead = 9
 
 /// Target clue count for a level, clamped so the ladder plateaus at the expert floor.
 func cluesForLevel(_ level: Int) -> Int {
