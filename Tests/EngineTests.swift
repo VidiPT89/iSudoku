@@ -16,6 +16,9 @@ enum EngineTests {
         check(SudokuSolver.countSolutions(original.solution, cap: 0) == 0, "zero cap")
         check(SudokuSolver.countSolutions(original.solution) == 1, "solved board")
         check(SudokuSolver.countSolutions(Array(repeating: 0, count: 81)) == 2, "multiple solutions")
+        check(SudokuSolver.countSolutions(Array(repeating: 0, count: 81), cap: 5) == 5, "cap respected")
+        let inkala = "800000000003600000070090200050007000000045700000100030001000068008500010090000400".compactMap { $0.wholeNumberValue }
+        check(SudokuSolver.countSolutions(inkala) == 1, "known minimal puzzle is unique")
         let corruptions: [(inout SudokuSnapshot) -> Void] = [
             { $0.values = [] }, { $0.solution = Array(repeating: 1, count: 81) },
             { $0.given[0] = 2 }, { $0.selectedIndex = 81 }, { $0.notes[0] = [10] },
@@ -62,7 +65,8 @@ enum EngineTests {
                 let puzzle = SudokuGenerator.generate(difficulty)
                 check(SudokuSolver.countSolutions(puzzle.given) == 1, "unique \(difficulty)")
                 check(puzzle.given.enumerated().allSatisfy { $0.element == 0 || $0.element == puzzle.solution[$0.offset] }, "givens match")
-                check(puzzle.given.filter { $0 != 0 }.count >= difficulty.minClues, "clue floor")
+                let clues = puzzle.given.filter { $0 != 0 }.count
+                check(clues >= difficulty.minClues && clues <= difficulty.minClues + 3, "clue count near target \(difficulty): \(clues)")
             }
         }
         engine.resetChallenge(level: 100)

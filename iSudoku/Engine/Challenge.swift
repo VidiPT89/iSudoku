@@ -44,6 +44,7 @@ func maxHintsForLevel(_ level: Int) -> Int {
 
 /// 3 = flawless, 2 = a few slips, 1 = finished. A mistake and a hint cost the same.
 func starsFor(wrongMoves: Int, hintsUsed: Int) -> Int {
+    // Each term is capped at 4 (already a 1-star result) so huge counters cannot overflow.
     let penalty = min(4, max(0, wrongMoves)) + min(4, max(0, hintsUsed))
     switch penalty {
     case 0: return 3

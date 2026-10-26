@@ -22,7 +22,21 @@ enum SudokuGenerator {
         return false
     }
 
+    /// A single dig can get stuck above the target on low clue counts, so `generate` retries
+    /// a few times and keeps the sparsest puzzle.
+    private static let digAttempts = 12
+
     static func generate(_ difficulty: Difficulty, targetClues: Int? = nil) -> GeneratedPuzzle {
+        let floor = targetClues ?? difficulty.minClues
+        var best = digOnce(towards: floor)
+        for _ in 1..<digAttempts where best.clues > floor {
+            let dug = digOnce(towards: floor)
+            if dug.clues < best.clues { best = dug }
+        }
+        return best.puzzle
+    }
+
+    private static func digOnce(towards floor: Int) -> (puzzle: GeneratedPuzzle, clues: Int) {
         var full = [Int](repeating: 0, count: 81)
         _ = fillGrid(&full)
         let solution = full
@@ -30,7 +44,6 @@ enum SudokuGenerator {
         var puzzle = full
         var clues = 81
         let order = (0..<81).shuffled()
-        let floor = targetClues ?? difficulty.minClues
 
         for idx in order {
             if clues <= floor { break }
@@ -44,6 +57,6 @@ enum SudokuGenerator {
             }
         }
 
-        return GeneratedPuzzle(given: puzzle, solution: solution)
+        return (GeneratedPuzzle(given: puzzle, solution: solution), clues)
     }
 }

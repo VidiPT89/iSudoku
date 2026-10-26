@@ -50,17 +50,11 @@ struct HowToPlayView: View {
 
             VStack(spacing: 0) {
                 HStack {
-                    Button(action: onClose) {
-                        Image(systemName: "chevron.left")
-                            .foregroundColor(Theme.text)
-                            .padding(10)
-                            .background(Circle().fill(Theme.bgPanel2))
-                    }
-                    .buttonStyle(.plain)
+                    CircleIconButton(systemName: "chevron.left", label: loc.t("backToMenu"), action: onClose)
                     Spacer()
                     Text(loc.t("htpTitle")).font(.system(size: 17, weight: .semibold)).foregroundColor(Theme.text)
                     Spacer()
-                    Color.clear.frame(width: 36, height: 36)
+                    Color.clear.frame(width: 44, height: 44)
                 }
                 .padding()
 

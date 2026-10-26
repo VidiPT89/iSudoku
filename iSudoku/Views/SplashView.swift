@@ -5,6 +5,7 @@ struct SplashView: View {
     var onFinish: () -> Void
 
     @State private var appeared = false
+    @State private var finished = false
 
     var body: some View {
         ZStack {
@@ -52,10 +53,18 @@ struct SplashView: View {
             }
         }
         .contentShape(Rectangle())
-        .onTapGesture { onFinish() }
+        .onTapGesture { finish() }
         .onAppear {
             withAnimation(.easeOut(duration: 0.7)) { appeared = true }
-            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) { onFinish() }
+            DispatchQueue.main.asyncAfter(deadline: .now() + 2.6) { finish() }
         }
+    }
+
+    /// The timer and a tap can both fire; only the first may leave the splash, otherwise a
+    /// late timer would yank the player back to the menu from a game they already started.
+    private func finish() {
+        guard !finished else { return }
+        finished = true
+        onFinish()
     }
 }

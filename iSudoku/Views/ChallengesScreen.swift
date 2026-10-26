@@ -72,13 +72,7 @@ struct ChallengesScreen: View {
 
     private var header: some View {
         HStack {
-            Button(action: onBack) {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(Theme.text)
-                    .frame(width: 34, height: 34)
-                    .background(Circle().fill(Theme.bgPanel2))
-            }
-            .buttonStyle(.plain)
+            CircleIconButton(systemName: "chevron.left", label: loc.t("backToMenu"), action: onBack)
             Text(loc.t("challengesTitle"))
                 .font(.system(size: 18, weight: .bold))
                 .foregroundColor(Theme.text)
@@ -124,6 +118,7 @@ private func bandColor(_ level: Int) -> Color {
 }
 
 private struct LevelTile: View {
+    @EnvironmentObject var loc: Localization
     let level: Int
     let unlocked: Bool
     let isCurrent: Bool
@@ -168,5 +163,6 @@ private struct LevelTile: View {
         }
         .buttonStyle(.plain)
         .disabled(!unlocked)
+        .accessibilityLabel("\(loc.t("level")) \(level), " + (unlocked ? "\(stars)/3 \(loc.t("starsLabel"))" : loc.t("locked")))
     }
 }

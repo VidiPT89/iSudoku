@@ -34,12 +34,10 @@ struct GameView: View {
                             .padding(.horizontal, 16)
                             .padding(.top, 8)
 
-                        if engine.isChallenge {
-                            Text("\(loc.t("mistakes")): \(engine.wrongMoves)")
-                                .font(.system(size: 12, weight: .medium))
-                                .foregroundColor(Theme.textDim)
-                                .padding(.top, 8)
-                        }
+                        Text(modeLine)
+                            .font(.system(size: 12, weight: .medium))
+                            .foregroundColor(Theme.textDim)
+                            .padding(.top, 8)
                         Spacer(minLength: 12)
 
                         SudokuGridView(
@@ -48,7 +46,7 @@ struct GameView: View {
                             shakeTokens: shakeTokens,
                             onCellTap: handleTap
                         )
-                        .frame(maxWidth: min(528, max(240, geometry.size.height - (engine.isChallenge ? 310 : 280))))
+                        .frame(maxWidth: min(528, max(240, geometry.size.height - 310)))
                         .padding(.horizontal, 16)
 
                         Spacer(minLength: 14)
@@ -69,6 +67,7 @@ struct GameView: View {
                     .frame(maxWidth: 560)
                     .frame(maxWidth: .infinity)
                 }
+                .background(arrowKeyShortcuts)
             }
             .disabled(modal != .none)
             .accessibilityHidden(modal != .none)
@@ -133,14 +132,7 @@ struct GameView: View {
 
     private var header: some View {
         HStack(spacing: 6) {
-            Button(action: { persist(); onExit() }) {
-                Image(systemName: "chevron.left")
-                    .foregroundColor(Theme.text)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Theme.bgPanel2))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(loc.t("backToMenu"))
+            CircleIconButton(systemName: "chevron.left", label: loc.t("backToMenu")) { persist(); onExit() }
 
             HStack(spacing: 0) {
                 if let level = engine.challengeLevel {
@@ -156,15 +148,26 @@ struct GameView: View {
             }
             .frame(maxWidth: .infinity)
 
-            Button(action: { modal = .confirmRestart }) {
-                Image(systemName: "arrow.clockwise")
-                    .foregroundColor(Theme.text)
-                    .frame(width: 44, height: 44)
-                    .background(Circle().fill(Theme.bgPanel2))
-            }
-            .buttonStyle(.plain)
-            .accessibilityLabel(loc.t("restart"))
+            CircleIconButton(systemName: "arrow.clockwise", label: loc.t("newGame")) { modal = .confirmRestart }
         }
+    }
+
+    /// Difficulty band, plus the mistake count that drives challenge stars.
+    private var modeLine: String {
+        let band = loc.t(engine.difficulty.rawValue)
+        return engine.isChallenge ? "\(band) · \(loc.t("mistakes")): \(engine.wrongMoves)" : band
+    }
+
+    /// Invisible buttons so a hardware keyboard (Mac, iPad) can move the selection.
+    private var arrowKeyShortcuts: some View {
+        ZStack {
+            Button("") { moveSelection(rows: -1, cols: 0) }.keyboardShortcut(.upArrow, modifiers: [])
+            Button("") { moveSelection(rows: 1, cols: 0) }.keyboardShortcut(.downArrow, modifiers: [])
+            Button("") { moveSelection(rows: 0, cols: -1) }.keyboardShortcut(.leftArrow, modifiers: [])
+            Button("") { moveSelection(rows: 0, cols: 1) }.keyboardShortcut(.rightArrow, modifiers: [])
+        }
+        .opacity(0)
+        .accessibilityHidden(true)
     }
 
     private func statGroup<V: View>(_ label: String, @ViewBuilder value: () -> V) -> some View {
@@ -186,6 +189,7 @@ struct GameView: View {
                 disabled: false,
                 action: { engine.toggleNotesMode(); persist() }
             )
+            .keyboardShortcut("n", modifiers: [])
             actionButton(
                 icon: "arrow.uturn.backward",
                 label: loc.t("undo"),
@@ -193,6 +197,7 @@ struct GameView: View {
                 disabled: !engine.canUndo,
                 action: performUndo
             )
+            .keyboardShortcut("z", modifiers: .command)
             actionButton(
                 icon: "lightbulb",
                 label: "\(loc.t("hint")) (\(engine.hintsRemaining))",
@@ -275,6 +280,13 @@ struct GameView: View {
 
     private func handleTap(_ index: Int) {
         handleResult(engine.selectCell(index))
+    }
+
+    private func moveSelection(rows: Int, cols: Int) {
+        let current = engine.selectedIndex ?? 0
+        let row = min(8, max(0, current / 9 + rows))
+        let col = min(8, max(0, current % 9 + cols))
+        handleTap(row * 9 + col)
     }
 
     private func handleDigit(_ digit: Int) {

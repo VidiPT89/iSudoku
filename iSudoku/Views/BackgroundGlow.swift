@@ -38,9 +38,28 @@ struct BrandLogo: View {
     }
 }
 
-struct FooterCredits: View {
+/// 44pt round icon button used for back / new-game controls in screen headers.
+struct CircleIconButton: View {
+    let systemName: String
+    let label: String
+    let action: () -> Void
+
     var body: some View {
-        let loc = Localization.shared
+        Button(action: action) {
+            Image(systemName: systemName)
+                .foregroundColor(Theme.text)
+                .frame(width: 44, height: 44)
+                .background(Circle().fill(Theme.bgPanel2))
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(label)
+    }
+}
+
+struct FooterCredits: View {
+    @EnvironmentObject var loc: Localization
+
+    var body: some View {
         VStack(spacing: 6) {
             Text(loc.t("developedBy"))
                 .foregroundColor(Theme.textDim)

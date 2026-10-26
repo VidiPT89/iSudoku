@@ -17,46 +17,54 @@ enum SudokuSolver {
         return true
     }
 
-    /// Minimum-remaining-values heuristic: picks the empty cell with the fewest legal
-    /// candidates, so the backtracker fails fast instead of blindly scanning row-major.
-    private static func findMrvCell(_ grid: [Int]) -> (index: Int, candidates: [Int])? {
-        var best: (index: Int, candidates: [Int])?
-        for idx in 0..<81 where grid[idx] == 0 {
-            let row = idx / 9, col = idx % 9
-            let candidates = (1...9).filter { isLegal(grid, row, col, $0) }
-            if candidates.isEmpty { return (idx, []) }
-            if best == nil || candidates.count < best!.candidates.count {
-                best = (idx, candidates)
-                if candidates.count == 1 { break }
-            }
-        }
-        return best
-    }
-
     /// Counts solutions up to `cap`, stopping early once reached — used to verify a dug
     /// puzzle still has exactly one solution without paying for a full enumeration.
+    /// Row/column/box digits are tracked as bitmasks (bit d = digit d) and the search always
+    /// branches on the empty cell with the fewest candidates (minimum-remaining-values).
     static func countSolutions(_ grid: [Int], cap: Int = 2) -> Int {
         guard grid.count == 81, grid.allSatisfy({ (0...9).contains($0) }),
               cap > 0, findConflictIndices(grid).isEmpty else { return 0 }
-        var count = 0
-        var working = grid
-
-        func backtrack() -> Bool {
-            guard let cell = findMrvCell(working) else {
-                count += 1
-                return count >= cap
-            }
-            if cell.candidates.isEmpty { return false }
-            for digit in cell.candidates {
-                working[cell.index] = digit
-                if backtrack() { return true }
-            }
-            working[cell.index] = 0
-            return false
+        var rows = [Int](repeating: 0, count: 9)
+        var cols = [Int](repeating: 0, count: 9)
+        var boxes = [Int](repeating: 0, count: 9)
+        var empties: [(r: Int, c: Int, b: Int)] = []
+        for idx in 0..<81 {
+            let r = idx / 9, c = idx % 9, b = (r / 3) * 3 + c / 3
+            if grid[idx] == 0 { empties.append((r, c, b)); continue }
+            let bit = 1 << grid[idx]
+            rows[r] |= bit; cols[c] |= bit; boxes[b] |= bit
         }
 
-        _ = backtrack()
-        return count
+        func search(_ remaining: Int) -> Int {
+            if remaining == 0 { return 1 }
+            var best = -1, bestMask = 0, bestCount = 10
+            for k in 0..<remaining {
+                let cell = empties[k]
+                let mask = ~(rows[cell.r] | cols[cell.c] | boxes[cell.b]) & 0x3fe
+                let n = mask.nonzeroBitCount
+                if n == 0 { return 0 }
+                if n < bestCount {
+                    best = k; bestMask = mask; bestCount = n
+                    if n == 1 { break }
+                }
+            }
+            // Move the chosen cell to the end of the active range so the recursion sees the rest.
+            empties.swapAt(best, remaining - 1)
+            let cell = empties[remaining - 1]
+            var found = 0
+            var mask = bestMask
+            while mask != 0 && found < cap {
+                let bit = mask & -mask
+                rows[cell.r] |= bit; cols[cell.c] |= bit; boxes[cell.b] |= bit
+                found += search(remaining - 1)
+                rows[cell.r] &= ~bit; cols[cell.c] &= ~bit; boxes[cell.b] &= ~bit
+                mask &= mask - 1
+            }
+            empties.swapAt(best, remaining - 1)
+            return found
+        }
+
+        return min(cap, search(empties.count))
     }
 
     /// Returns the set of cell indices participating in a row/column/box duplicate.

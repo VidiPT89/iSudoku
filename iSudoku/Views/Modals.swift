@@ -42,7 +42,7 @@ struct WinModalView: View {
 
             HStack(spacing: 20) {
                 statBlock(loc.t("time"), time)
-                statBlock(loc.t("hintsLeft"), "\(hintsUsed)")
+                statBlock(loc.t("finalHints"), "\(hintsUsed)")
             }
             .padding(.vertical, 6)
 

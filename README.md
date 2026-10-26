@@ -15,6 +15,7 @@
 - 💾 Autosaves mid-game, with a "Continue Game" option from the main menu
 - 🏆 A local best-time / fewest-hints leaderboard per difficulty, stored on-device (no backend), shown after a win
 - 🔊 Sound feedback on digit entry, conflicts and winning (see [Sound](#-sound) below)
+- ⌨️ Hardware keyboard support on Mac and iPad — digits 1-9, Delete to erase, arrow keys to move, N for notes, ⌘Z to undo
 - 📖 An in-app "How to Play" guide covering the rule, given cells, conflicts, notes and the hint/undo tools
 - 🇵🇹 🇬🇧 One-click language toggle between European Portuguese and English, remembered between visits
 - 🖥️ 📱 One codebase, two native targets — macOS and iOS/iPadOS, both built with SwiftUI
@@ -75,11 +76,15 @@ iSudoku/
      - re-solve the puzzle with a capped counter (stop early at 2 solutions)
      - keep the removal only if the count is still exactly 1
      - otherwise put the digit back
-   stop once the difficulty's minimum clue count is reached
+   stop once the difficulty's target clue count is reached; a dig that
+   gets stuck above the target is retried (up to 12 times) and the
+   sparsest puzzle is kept
 
-3. The solver used for both digging and hints is a single MRV
-   (minimum-remaining-values) backtracker: always branch on the
-   emptiest cell first, so contradictions surface almost immediately
+3. The uniqueness check is a bitmask MRV (minimum-remaining-values)
+   backtracker: row/column/box digits live in 9-bit masks and the search
+   always branches on the emptiest cell first, so even expert grids are
+   generated in milliseconds. Hints never re-solve — they read the
+   cached solution grid
 ```
 
 ### Hints & conflicts
@@ -111,7 +116,7 @@ Pick the **iSudoku-iOS** scheme for iPhone/iPad (Simulator or device) or **iSudo
 
 ## 🔊 Sound
 
-Digit entry, conflict and win feedback use `AudioServicesPlaySystemSound` (AudioToolbox) as a placeholder, since the project ships no custom audio assets yet — see the comment in `SoundManager.swift` for how to swap in real `.caf`/`.wav` files via `AVAudioPlayer` later.
+Digit entry, conflict, hint and win feedback use built-in system sounds, since the project ships no custom audio assets yet: `AudioServicesPlaySystemSound` (AudioToolbox) on iOS and named `NSSound`s on macOS — see the comment in `SoundManager.swift` for how to swap in real `.caf`/`.wav` files via `AVAudioPlayer` later.
 
 ## 📝 Notes
 
@@ -128,7 +133,7 @@ Developed by **David Arsénio Martins** — *"Vidi"*
 ## Verification and behaviour (2026-10-26)
 
 - Challenge mode progressively reduces the target to 23 clues and awards 1–3 stars based on mistakes and hints. A generator may retain more clues to preserve a unique solution; clue count alone is not a human difficulty rating.
-- Time pauses outside active play, during restart confirmation and after victory.
+- The ↻ button starts a new puzzle at the same difficulty (or the same challenge level) after confirmation. Time pauses outside active play, during that confirmation and after victory.
 - Invalid saved games are rejected safely; completed games are not offered as resumable games.
 - Undo history is saved for up to 200 moves and restored with the game. Older saves without history remain compatible.
 - The Android implementation was retired at the owner's request.

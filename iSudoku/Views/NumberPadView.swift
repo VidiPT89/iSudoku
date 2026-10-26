@@ -22,6 +22,7 @@ struct NumberPadView: View {
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(notesMode ? Theme.accent.opacity(0.6) : Theme.border, style: StrokeStyle(lineWidth: 1, dash: notesMode ? [3, 3] : [])))
             }
             .buttonStyle(.plain)
+            .keyboardShortcut(.delete, modifiers: [])
             .accessibilityLabel(loc.t("erase"))
         }
     }
@@ -38,6 +39,7 @@ struct NumberPadView: View {
                 .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(notesMode ? Theme.accent.opacity(0.6) : Theme.border, style: StrokeStyle(lineWidth: 1, dash: notesMode ? [3, 3] : [])))
         }
         .buttonStyle(.plain)
+        .keyboardShortcut(KeyEquivalent(Character("\(digit)")), modifiers: [])
         .disabled(disabled)
     }
 }
