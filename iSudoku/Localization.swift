@@ -42,6 +42,9 @@ final class Localization: ObservableObject {
             switch e.kind {
             case .pointing: return fill("elimPointing", ["b": "\(e.source.index + 1)", "d": "\(e.digits[0])", "line": line(e.target)])
             case .claiming: return fill("elimClaiming", ["b": "\(e.target.index + 1)", "d": "\(e.digits[0])", "line": line(e.source)])
+            case .xWing:
+                return fill(e.source.kind == .row ? "elimXWingRows" : "elimXWingCols",
+                            ["a": "\(e.base[0] + 1)", "b": "\(e.base[1] + 1)", "d": "\(e.digits[0])", "x": "\(e.cover[0] + 1)", "y": "\(e.cover[1] + 1)"])
             case .pair:
                 let ofKey = e.source.kind == .row ? "ofRow" : e.source.kind == .col ? "ofCol" : "ofBox"
                 return fill("elimPair", ["cells": e.cells.map(cellRef).joined(separator: t("and")),
@@ -113,6 +116,8 @@ final class Localization: ObservableObject {
             "elimPointing": "No bloco {b}, o {d} só pode ficar na {line}, por isso sai do resto da {line}.",
             "elimClaiming": "Na {line}, o {d} só pode ficar no bloco {b}, por isso sai das outras casas desse bloco.",
             "elimPair": "As casas {cells} só aceitam o {a} e o {e}, por isso esses números saem das outras casas {of}.",
+            "elimXWingRows": "X-Wing: nas linhas {a} e {b}, o {d} só pode ficar nas colunas {x} e {y}, por isso sai das outras casas dessas colunas.",
+            "elimXWingCols": "X-Wing: nas colunas {a} e {b}, o {d} só pode ficar nas linhas {x} e {y}, por isso sai das outras casas dessas linhas.",
             "clueWrong": "Há um número errado na linha {r}.",
             "clueHiddenBox": "Olha para o bloco destacado: o {d} só tem uma casa possível.",
             "clueHiddenRow": "Olha para a linha {r}: o {d} só tem uma casa possível.",
@@ -155,7 +160,7 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notas",
             "htpNotesBody": "Marca candidatos nas casas vazias. Ao colocar um número, essa nota é removida da mesma linha, coluna e bloco. Desfazer também recupera essas notas.",
             "htpToolsTitle": "Ferramentas",
-            "htpHintTool": "O primeiro toque dá uma pista grátis: onde olhar, sem preencher. O segundo (Revelar) preenche a casa e explica a dedução: um número errado primeiro; senão sozinhos, candidatos apontados, reclamados ou pares. Há 3, 4 ou 5 revelações por partida e uma usada continua a contar mesmo que desfaças a jogada.",
+            "htpHintTool": "O primeiro toque dá uma pista grátis: onde olhar, sem preencher. O segundo (Revelar) preenche a casa e explica a dedução: um número errado primeiro; senão sozinhos, candidatos apontados, reclamados, pares ou X-Wing. Há 3, 4 ou 5 revelações por partida e uma usada continua a contar mesmo que desfaças a jogada.",
             "htpUndoTool": "Recupera o valor e as notas anteriores. Os últimos 200 movimentos ficam guardados ao sair e retomar. Erros e dicas usados continuam a contar.",
             "htpCloseButton": "Entendido",
         ],
@@ -210,6 +215,8 @@ final class Localization: ObservableObject {
             "elimPointing": "In box {b}, {d} can only go in {line}, so it leaves the rest of {line}.",
             "elimClaiming": "In {line}, {d} can only go in box {b}, so it leaves the other cells of that box.",
             "elimPair": "Cells {cells} only take {a} and {e}, so those digits leave the other cells of {of}.",
+            "elimXWingRows": "X-Wing: in rows {a} and {b}, {d} can only go in columns {x} and {y}, so it leaves the other cells of those columns.",
+            "elimXWingCols": "X-Wing: in columns {a} and {b}, {d} can only go in rows {x} and {y}, so it leaves the other cells of those rows.",
             "clueWrong": "There is a wrong digit in row {r}.",
             "clueHiddenBox": "Look at the highlighted box: {d} has only one possible cell.",
             "clueHiddenRow": "Look at row {r}: {d} has only one possible cell.",
@@ -252,7 +259,7 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notes",
             "htpNotesBody": "Mark candidates in empty cells. Placing a digit removes that note from its row, column and box. Undo also restores those notes.",
             "htpToolsTitle": "Tools",
-            "htpHintTool": "The first tap gives a free clue: where to look, without filling anything. The second (Reveal) fills the cell and explains the deduction: a wrong digit first; otherwise singles, pointing or claiming candidates, or pairs. Each game has 3, 4 or 5 reveals and a used one still counts even if you undo the move.",
+            "htpHintTool": "The first tap gives a free clue: where to look, without filling anything. The second (Reveal) fills the cell and explains the deduction: a wrong digit first; otherwise singles, pointing or claiming candidates, pairs or X-Wing. Each game has 3, 4 or 5 reveals and a used one still counts even if you undo the move.",
             "htpUndoTool": "Restores the previous value and notes. The last 200 moves are saved when you leave and resume. Mistakes and used hints still count.",
             "htpCloseButton": "Got It",
         ],

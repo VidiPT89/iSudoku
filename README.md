@@ -10,8 +10,8 @@
 - ✅ Uniquely-solvable puzzles — clues are removed one at a time, keeping each removal only if the puzzle still solves to exactly one grid
 - ✏️ Pencil-mark notes mode — jot down candidate digits in a cell instead of committing a final value
 - 🚫 Live conflict detection — placing a digit that already exists in the same row, column or 3x3 box highlights every conflicting cell
-- 💡 Two-step teaching hints: the first tap gives a free **clue** — where to look, without filling anything; the second tap (**Reveal**, 3/4/5 per game by difficulty) fills the cell and explains the deduction. A wrong digit is fixed first; otherwise the hint uses the simplest technique that works — a single (only one cell for a digit in a box/row/column, or only one digit for a cell), exposed when needed by **pointing** or **claiming** candidates or a **naked pair** — and shows only the elimination steps that single actually needs
-- 🧠 Difficulty graded by human technique, never by guessing: Easy and Medium are solvable with singles alone; Hard always needs pointing/claiming candidates or naked pairs, and those are always enough
+- 💡 Two-step teaching hints: the first tap gives a free **clue** — where to look, without filling anything; the second tap (**Reveal**, 3/4/5 per game by difficulty) fills the cell and explains the deduction. A wrong digit is fixed first; otherwise the hint uses the simplest technique that works — a single (only one cell for a digit in a box/row/column, or only one digit for a cell), exposed when needed by **pointing** or **claiming** candidates, a **naked pair** or, the hardest, an **X-Wing** — and shows only the elimination steps that single actually needs
+- 🧠 Difficulty graded by human technique, never by guessing: Easy and Medium are solvable with singles alone; Hard always needs pointing/claiming candidates or naked pairs, and those are always enough; expert challenge levels are always solvable by logic up to X-Wing
 - ↩️ Undo for the last 200 moves, including after resuming a saved game
 - 🎬 Smooth SwiftUI animations on digit entry and hint reveal
 - 💾 Autosaves mid-game, with a "Continue Game" option from the main menu
@@ -45,7 +45,7 @@ iSudoku/
 │   ├── Engine/
 │   │   ├── SudokuGenerator.swift # Randomized full-grid fill + hole digging
 │   │   ├── SudokuSolver.swift     # Bitmask MRV solution counter and conflict scan
-│   │   ├── Techniques.swift       # Human techniques: singles, pointing/claiming, naked pairs, grading
+│   │   ├── Techniques.swift       # Human techniques: singles, pointing/claiming, naked pairs, X-Wing, grading
 │   │   ├── GameEngine.swift        # Board state, dispatch results, undo stack, hints
 │   │   ├── SaveStore.swift          # Mid-game autosave/restore (UserDefaults)
 │   │   ├── Leaderboard.swift         # Local best time/hints per difficulty (UserDefaults)
@@ -84,7 +84,9 @@ iSudoku/
    sparsest puzzle is kept. Removals must also keep the puzzle solvable by
    human techniques: singles only at 32+ clues (Easy, Medium), singles +
    pointing/claiming/naked pairs at 26-31 (Hard — which is retried until
-   singles alone are not enough); expert levels below 26 only need uniqueness
+   singles alone are not enough), and all of those plus X-Wing below 26
+   (expert levels — retried for a puzzle that needs eliminations, and for
+   one that needs X-Wing within a bounded budget, since those are rare)
 
 3. The uniqueness check is a bitmask MRV (minimum-remaining-values)
    backtracker: row/column/box digits live in 9-bit masks and the search

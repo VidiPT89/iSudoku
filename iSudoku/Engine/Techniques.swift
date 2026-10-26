@@ -4,10 +4,14 @@ import Foundation
 /// - singles: a digit with one possible cell in a box/row/column (hidden), or a cell with one
 ///   possible digit (naked);
 /// - eliminations: pointing (a box's candidates for a digit sit on one line), claiming (a line's
-///   candidates for a digit sit in one box) and naked pairs.
+///   candidates for a digit sit in one box), naked pairs and, the hardest, X-Wing (in two rows a
+///   digit fits only in the same two columns, or the transpose).
 /// Candidates are 9-bit masks (bit d = digit d); filled cells have mask 0.
 enum Techniques {
     private static let boxOrder: [SudokuUnit.Kind] = [.box, .row, .col]
+    private static let rowOf = (0..<81).map { $0 / 9 }
+    private static let colOf = (0..<81).map { $0 % 9 }
+    private static let boxOfCell = (0..<81).map(boxOf)
     private static let peers: [[Int]] = (0..<81).map { idx in
         let units = [SudokuUnit(kind: .row, index: idx / 9), SudokuUnit(kind: .col, index: idx % 9), SudokuUnit(kind: .box, index: boxOf(idx))]
         return Array(Set(units.flatMap(\.cells)).subtracting([idx])).sorted()
@@ -19,9 +23,13 @@ enum Techniques {
         var rows = [Int](repeating: 0, count: 9), cols = rows, boxes = rows
         for idx in 0..<81 where grid[idx] != 0 {
             let bit = 1 << grid[idx]
-            rows[idx / 9] |= bit; cols[idx % 9] |= bit; boxes[boxOf(idx)] |= bit
+            rows[rowOf[idx]] |= bit; cols[colOf[idx]] |= bit; boxes[boxOfCell[idx]] |= bit
         }
-        return (0..<81).map { grid[$0] != 0 ? 0 : ~(rows[$0 / 9] | cols[$0 % 9] | boxes[boxOf($0)]) & 0x3fe }
+        var masks = [Int](repeating: 0, count: 81)
+        for idx in 0..<81 where grid[idx] == 0 {
+            masks[idx] = ~(rows[rowOf[idx]] | cols[colOf[idx]] | boxes[boxOfCell[idx]]) & 0x3fe
+        }
+        return masks
     }
 
     static func digits(of mask: Int) -> [Int] { (1...9).filter { mask & (1 << $0) != 0 } }
@@ -31,17 +39,17 @@ enum Techniques {
     static func findSingle(in masks: [Int], onlyIndex: Int? = nil) -> SingleStep? {
         for kind in boxOrder {
             for n in 0..<9 {
-                let unit = SudokuUnit(kind: kind, index: n)
-                let cells = unit.cells
+                let cells = SudokuUnit.table[kind]![n]
                 if let only = onlyIndex, !cells.contains(only) { continue }
                 // Digits seen in exactly one cell of the unit: once & ~twice.
                 var once = 0, twice = 0
                 for i in cells { twice |= once & masks[i]; once |= masks[i] }
                 var unique = once & ~twice
                 if let only = onlyIndex { unique &= masks[only] }
-                guard unique != 0, let digit = digits(of: unique).first,
-                      let index = cells.first(where: { masks[$0] & (1 << digit) != 0 }) else { continue }
-                return SingleStep(index: index, digit: digit, technique: .hidden, unit: unit)
+                guard unique != 0 else { continue }
+                let digit = unique.trailingZeroBitCount
+                guard let index = cells.first(where: { masks[$0] & (1 << digit) != 0 }) else { continue }
+                return SingleStep(index: index, digit: digit, technique: .hidden, unit: SudokuUnit(kind: kind, index: n))
             }
         }
         for idx in 0..<81 where (onlyIndex == nil || idx == onlyIndex) && masks[idx].nonzeroBitCount == 1 {
@@ -54,44 +62,85 @@ enum Techniques {
         findSingle(in: candidateMasks(grid), onlyIndex: onlyIndex)
     }
 
-    /// First elimination that removes at least one candidate, or nil.
-    static func findElimination(_ masks: [Int]) -> Elimination? {
-        func removals(in cells: [Int], keeping keep: [Int], bits: Int) -> [Elimination.Removal] {
-            cells.filter { !keep.contains($0) && masks[$0] & bits != 0 }.map { Elimination.Removal(index: $0, bits: masks[$0] & bits) }
-        }
+    /// First elimination up to `level` that removes at least one candidate, simplest first.
+    static func findElimination(_ masks: [Int], level: TechniqueLevel = .xWing) -> Elimination? {
+        // Pointing: a box's candidates for a digit all sit on one row or column.
         for b in 0..<9 {
-            let box = SudokuUnit(kind: .box, index: b)
+            let box = SudokuUnit.table[.box]![b]
             for d in 1...9 {
-                let homes = box.cells.filter { masks[$0] & (1 << d) != 0 }
-                guard homes.count >= 2 else { continue }
-                for line in [SudokuUnit(kind: .row, index: homes[0] / 9), SudokuUnit(kind: .col, index: homes[0] % 9)]
-                where homes.allSatisfy({ line.cells.contains($0) }) {
-                    let cut = removals(in: line.cells, keeping: homes, bits: 1 << d)
-                    if !cut.isEmpty { return Elimination(kind: .pointing, digits: [d], source: box, target: line, cells: homes, removals: cut) }
+                let bit = 1 << d
+                var rowsSeen = 0, colsSeen = 0, count = 0
+                for i in box where masks[i] & bit != 0 { rowsSeen |= 1 << rowOf[i]; colsSeen |= 1 << colOf[i]; count += 1 }
+                guard count >= 2 else { continue }
+                for (kind, seen) in [(SudokuUnit.Kind.row, rowsSeen), (.col, colsSeen)] where seen & (seen - 1) == 0 {
+                    let line = SudokuUnit(kind: kind, index: seen.trailingZeroBitCount)
+                    let cut = line.cells.filter { boxOfCell[$0] != b && masks[$0] & bit != 0 }.map { Elimination.Removal(index: $0, bits: bit) }
+                    if !cut.isEmpty {
+                        return Elimination(kind: .pointing, digits: [d], source: SudokuUnit(kind: .box, index: b), target: line,
+                                           cells: box.filter { masks[$0] & bit != 0 }, removals: cut)
+                    }
                 }
             }
         }
+        // Claiming: a row's or column's candidates for a digit all sit in one box.
         for kind in [SudokuUnit.Kind.row, .col] {
+            let lineOf = kind == .row ? rowOf : colOf
             for n in 0..<9 {
-                let line = SudokuUnit(kind: kind, index: n)
+                let line = SudokuUnit.table[kind]![n]
                 for d in 1...9 {
-                    let homes = line.cells.filter { masks[$0] & (1 << d) != 0 }
-                    guard homes.count >= 2, homes.allSatisfy({ boxOf($0) == boxOf(homes[0]) }) else { continue }
-                    let box = SudokuUnit(kind: .box, index: boxOf(homes[0]))
-                    let cut = removals(in: box.cells, keeping: homes, bits: 1 << d)
-                    if !cut.isEmpty { return Elimination(kind: .claiming, digits: [d], source: line, target: box, cells: homes, removals: cut) }
+                    let bit = 1 << d
+                    var boxesSeen = 0, count = 0
+                    for i in line where masks[i] & bit != 0 { boxesSeen |= 1 << boxOfCell[i]; count += 1 }
+                    guard count >= 2, boxesSeen & (boxesSeen - 1) == 0 else { continue }
+                    let box = SudokuUnit(kind: .box, index: boxesSeen.trailingZeroBitCount)
+                    let cut = box.cells.filter { lineOf[$0] != n && masks[$0] & bit != 0 }.map { Elimination.Removal(index: $0, bits: bit) }
+                    if !cut.isEmpty {
+                        return Elimination(kind: .claiming, digits: [d], source: SudokuUnit(kind: kind, index: n), target: box,
+                                           cells: line.filter { masks[$0] & bit != 0 }, removals: cut)
+                    }
                 }
             }
         }
+        // Naked pair: two cells of a unit with the same two candidates.
         for kind in boxOrder {
             for n in 0..<9 {
-                let unit = SudokuUnit(kind: kind, index: n)
-                let pairs = unit.cells.filter { masks[$0].nonzeroBitCount == 2 }
-                for (a, first) in pairs.enumerated() {
-                    for second in pairs[(a + 1)...] where masks[first] == masks[second] {
-                        let cut = removals(in: unit.cells, keeping: [first, second], bits: masks[first])
+                let cells = SudokuUnit.table[kind]![n]
+                for a in 0..<9 where masks[cells[a]].nonzeroBitCount == 2 {
+                    let pairMask = masks[cells[a]]
+                    for b in (a + 1)..<9 where masks[cells[b]] == pairMask {
+                        let cut = cells.filter { $0 != cells[a] && $0 != cells[b] && masks[$0] & pairMask != 0 }
+                            .map { Elimination.Removal(index: $0, bits: masks[$0] & pairMask) }
                         if !cut.isEmpty {
-                            return Elimination(kind: .pair, digits: digits(of: masks[first]), source: unit, target: unit, cells: [first, second], removals: cut)
+                            let unit = SudokuUnit(kind: kind, index: n)
+                            return Elimination(kind: .pair, digits: digits(of: pairMask), source: unit, target: unit, cells: [cells[a], cells[b]], removals: cut)
+                        }
+                    }
+                }
+            }
+        }
+        return level >= .xWing ? findXWing(masks) : nil
+    }
+
+    /// X-Wing: in two base lines a digit fits only on the same two cover lines, so it leaves the
+    /// rest of those cover lines.
+    private static func findXWing(_ masks: [Int]) -> Elimination? {
+        for (baseKind, coverKind) in [(SudokuUnit.Kind.row, SudokuUnit.Kind.col), (.col, .row)] {
+            let lines = SudokuUnit.table[baseKind]!
+            for d in 1...9 {
+                let bit = 1 << d
+                // positions[line] = 9-bit mask of the cover lines where the digit can sit.
+                let positions = lines.map { cells in cells.indices.reduce(0) { masks[cells[$1]] & bit != 0 ? $0 | (1 << $1) : $0 } }
+                for a in 0..<9 where positions[a].nonzeroBitCount == 2 {
+                    for b in (a + 1)..<9 where positions[b] == positions[a] {
+                        let cover = (0..<9).filter { positions[a] & (1 << $0) != 0 }
+                        let cells = [a, b].flatMap { line in cover.map { lines[line][$0] } }
+                        let cut = cover.flatMap { SudokuUnit.table[coverKind]![$0] }
+                            .filter { !cells.contains($0) && masks[$0] & bit != 0 }
+                            .map { Elimination.Removal(index: $0, bits: bit) }
+                        if !cut.isEmpty {
+                            return Elimination(kind: .xWing, digits: [d], source: SudokuUnit(kind: baseKind, index: a),
+                                               target: SudokuUnit(kind: coverKind, index: cover[0]), cells: cells, removals: cut,
+                                               base: [a, b], cover: cover)
                         }
                     }
                 }
@@ -108,6 +157,16 @@ enum Techniques {
     /// reason no longer holds (it depended on an elimination that was dropped).
     private static func replay(_ e: Elimination, on masks: inout [Int]) -> Bool {
         let bits = e.digits.reduce(0) { $0 | (1 << $1) }
+        if e.kind == .xWing {
+            // Each base line must still hold the digit, and only on the cover lines.
+            let coverCells = e.cover.flatMap { SudokuUnit(kind: e.target.kind, index: $0).cells }
+            let baseLines = e.base.map { SudokuUnit(kind: e.source.kind, index: $0).cells }
+            guard baseLines.allSatisfy({ $0.contains { masks[$0] & bits != 0 } }),
+                  baseLines.joined().allSatisfy({ masks[$0] & bits == 0 || coverCells.contains($0) }) else { return false }
+            let baseCells = Set(baseLines.joined())
+            for i in coverCells where !baseCells.contains(i) { masks[i] &= ~bits }
+            return true
+        }
         let source = e.source.cells, target = e.target.cells
         if e.kind == .pair {
             guard e.cells.allSatisfy({ masks[$0] != 0 && masks[$0] & ~bits == 0 }) else { return false }
@@ -150,10 +209,9 @@ enum Techniques {
         return (single, eliminations)
     }
 
-    /// True when the grid can be completed by forced steps only: singles, plus the eliminations
-    /// when `withEliminations` is set. Every step is forced, so a grid that passes also has
-    /// exactly one solution.
-    static func solvesLogically(_ grid: [Int], withEliminations: Bool = false) -> Bool {
+    /// True when the grid can be completed by forced steps only, using techniques up to `level`.
+    /// Every step is forced, so a grid that passes also has exactly one solution.
+    static func solvesLogically(_ grid: [Int], level: TechniqueLevel = .singles) -> Bool {
         var work = grid
         var masks = candidateMasks(work)
         var empty = work.filter { $0 == 0 }.count
@@ -169,11 +227,17 @@ enum Techniques {
                 }
                 continue
             }
-            guard withEliminations, let elimination = findElimination(masks) else { return false }
+            guard level > .singles, let elimination = findElimination(masks, level: level) else { return false }
             apply(elimination, to: &masks)
         }
         return SudokuSolver.findConflictIndices(work).isEmpty
     }
+}
+
+/// Technique levels grade puzzles: singles < basic eliminations (pointing, claiming, pairs) < X-Wing.
+enum TechniqueLevel: Int, Comparable {
+    case singles, basic, xWing
+    static func < (a: Self, b: Self) -> Bool { a.rawValue < b.rawValue }
 }
 
 struct SudokuUnit: Equatable {
@@ -181,16 +245,14 @@ struct SudokuUnit: Equatable {
     let kind: Kind
     let index: Int
 
-    /// Cell indices (boxes numbered left-to-right, top-to-bottom).
-    var cells: [Int] {
-        switch kind {
-        case .row: return (0..<9).map { index * 9 + $0 }
-        case .col: return (0..<9).map { $0 * 9 + index }
-        case .box:
-            let r0 = (index / 3) * 3, c0 = (index % 3) * 3
-            return (0..<9).map { (r0 + $0 / 3) * 9 + c0 + $0 % 3 }
-        }
-    }
+    /// Cell indices of every unit (boxes numbered left-to-right, top-to-bottom), built once.
+    static let table: [Kind: [[Int]]] = [
+        .row: (0..<9).map { r in (0..<9).map { r * 9 + $0 } },
+        .col: (0..<9).map { c in (0..<9).map { $0 * 9 + c } },
+        .box: (0..<9).map { b in (0..<9).map { ((b / 3) * 3 + $0 / 3) * 9 + (b % 3) * 3 + $0 % 3 } },
+    ]
+
+    var cells: [Int] { Self.table[kind]![index] }
 }
 
 /// How a hint fills its cell, so the UI can explain the reasoning.
@@ -209,7 +271,7 @@ struct SingleStep: Equatable {
 }
 
 struct Elimination: Equatable {
-    enum Kind { case pointing, claiming, pair }
+    enum Kind { case pointing, claiming, pair, xWing }
     struct Removal: Equatable {
         let index: Int
         let bits: Int
@@ -220,6 +282,9 @@ struct Elimination: Equatable {
     let target: SudokuUnit
     let cells: [Int]
     let removals: [Removal]
+    /// X-Wing only: the two base lines (of `source.kind`) and the two cover lines (of `target.kind`).
+    var base: [Int] = []
+    var cover: [Int] = []
 }
 
 /// A planned hint: shown first as a clue (`revealed == false`), then filled in.

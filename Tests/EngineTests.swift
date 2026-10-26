@@ -180,12 +180,25 @@ enum EngineTests {
         let paired = Techniques.findElimination(pairGrid)
         check(paired?.kind == .pair && paired?.digits == [2, 7] && paired?.removals == [Elimination.Removal(index: 2, bits: 4)], "naked pair")
         check(Techniques.findElimination(Array(repeating: 0, count: 81)) == nil, "no elimination on empty candidates")
+        var xWingGrid = Array(repeating: 0, count: 81)
+        for i in [1, 6, 37, 42] { xWingGrid[i] = 1 << 3 }
+        xWingGrid[64] = (1 << 3) | (1 << 5)
+        let xWing = Techniques.findElimination(xWingGrid)
+        check(xWing?.kind == .xWing && xWing?.base == [0, 4] && xWing?.cover == [1, 6] && xWing?.removals == [Elimination.Removal(index: 64, bits: 8)], "x-wing")
+        check(Techniques.findElimination(xWingGrid, level: .basic) == nil, "x-wing is beyond the basic level")
+        Localization.shared.lang = .en
+        let xWingHint = HintPlan(index: 64, digit: 5, technique: .naked, unit: nil, eliminations: [xWing!], highlight: [], revealed: true)
+        check(Localization.shared.hintExplanation(xWingHint).hasPrefix("X-Wing: in rows 1 and 5, 3 can only go in columns 2 and 7, so it leaves the other cells of those columns."), "x-wing text")
+        for _ in 0..<3 {
+            let expert = SudokuGenerator.generate(.expert, targetClues: 23)
+            check(Techniques.solvesLogically(expert.given, level: .xWing), "expert solvable by logic up to x-wing")
+        }
         let pointingHint = HintPlan(index: 0, digit: 9, technique: .naked, unit: nil, eliminations: [pointed!], highlight: [])
         Localization.shared.lang = .en
         check(Localization.shared.hintExplanation(pointingHint) == "In box 1, 5 can only go in row 1, so it leaves the rest of row 1.\nRow 1 has a cell where only one digit fits.\nPress Reveal to fill the cell in (uses a hint).", "clue text with elimination")
         for _ in 0..<5 {
             let hard = SudokuGenerator.generate(.hard)
-            check(Techniques.solvesLogically(hard.given, withEliminations: true) && !Techniques.solvesLogically(hard.given), "hard needs eliminations, never guessing")
+            check(Techniques.solvesLogically(hard.given, level: .basic) && !Techniques.solvesLogically(hard.given), "hard needs eliminations, never guessing")
         }
         for _ in 0..<3 {
             let hard = SudokuGenerator.generate(.hard)
