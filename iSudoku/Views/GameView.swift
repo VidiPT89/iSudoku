@@ -48,7 +48,7 @@ struct GameView: View {
                             hintUnit: engine.lastHint?.highlight ?? [],
                             onCellTap: handleTap
                         )
-                        .frame(maxWidth: min(528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 360))))
+                        .frame(maxWidth: min(wide(geometry) ? 820 : 528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 360))))
                         .padding(.horizontal, 16)
 
                         if let hint = engine.lastHint {
@@ -72,7 +72,7 @@ struct GameView: View {
                         .padding(.top, 14)
                         .padding(.bottom, 16)
                     }
-                    .frame(maxWidth: 560)
+                    .frame(maxWidth: wide(geometry) ? 860 : 560)
                     .frame(maxWidth: .infinity)
                 }
                 .background(arrowKeyShortcuts)
@@ -167,13 +167,16 @@ struct GameView: View {
             .font(.system(.footnote))
             .foregroundColor(Theme.textDim)
             .fixedSize(horizontal: false, vertical: true)
-            .frame(maxWidth: 528, alignment: .leading)
+            .frame(maxWidth: .infinity, alignment: .leading)
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
             .background(RoundedRectangle(cornerRadius: 10).fill(Theme.bgPanel))
             .overlay(alignment: .leading) { Rectangle().fill(Theme.accent).frame(width: 3) }
             .clipShape(RoundedRectangle(cornerRadius: 10))
     }
+
+    /// iPad and wide Mac windows get a larger board instead of a phone-sized one in empty space.
+    private func wide(_ geometry: GeometryProxy) -> Bool { geometry.size.width >= 700 }
 
     /// Difficulty band, plus the mistake count that drives challenge stars.
     private var modeLine: String {

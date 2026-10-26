@@ -35,6 +35,7 @@ struct SudokuGridView: View {
                                 shakeToken: shakeTokens[index] ?? 0,
                                 thickRight: col == 2 || col == 5,
                                 thickBottom: row == 2 || row == 5,
+                                cellSize: side / 9,
                                 onTap: { onCellTap(index) }
                             )
                             .frame(width: side / 9, height: side / 9)
@@ -63,6 +64,8 @@ private struct SudokuCellView: View {
     let shakeToken: Int
     let thickRight: Bool
     let thickBottom: Bool
+    /// Digits scale with the cell so the board reads the same on iPhone, iPad and Mac.
+    let cellSize: CGFloat
     let onTap: () -> Void
 
     @State private var shakeOffset: CGFloat = 0
@@ -91,12 +94,12 @@ private struct SudokuCellView: View {
             Rectangle().fill(bg)
             if let value = cell.value {
                 Text("\(value)")
-                    .font(.system(size: 22, weight: cell.isGiven ? .semibold : .medium, design: .rounded))
+                    .font(.system(size: cellSize * 0.54, weight: cell.isGiven ? .semibold : .medium, design: .rounded))
                     .underline(isSameNumber)
                     .minimumScaleFactor(0.65)
                     .foregroundColor(cell.isConflict ? Theme.conflictText : (cell.isGiven ? Theme.givenDigit : Theme.userDigit))
             } else if !cell.notes.isEmpty {
-                NotesGridView(notes: cell.notes)
+                NotesGridView(notes: cell.notes, fontSize: cellSize * 0.24)
             }
         }
         .overlay(Rectangle().strokeBorder(isSelected ? Theme.accentLight : (isHintUnit ? Theme.accentDark : .clear), lineWidth: isSelected ? 2 : 1))
@@ -134,6 +137,7 @@ private struct SudokuCellView: View {
 
 private struct NotesGridView: View {
     let notes: Set<Int>
+    let fontSize: CGFloat
 
     var body: some View {
         VStack(spacing: 0) {
@@ -142,7 +146,7 @@ private struct NotesGridView: View {
                     ForEach(0..<3) { c in
                         let digit = r * 3 + c + 1
                         Text(notes.contains(digit) ? "\(digit)" : "")
-                            .font(.system(size: 10, weight: .medium))
+                            .font(.system(size: fontSize, weight: .medium))
                             .foregroundColor(Theme.noteText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
