@@ -1,0 +1,14 @@
+name: Native verification
+on: [push, pull_request]
+permissions:
+  contents: read
+jobs:
+  test-and-build:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: ./scripts/test.sh
+      - name: Build macOS
+        run: xcodebuild -project iSudoku.xcodeproj -scheme iSudoku-macOS -destination 'platform=macOS' CODE_SIGNING_ALLOWED=NO build
+      - name: Build iOS Simulator
+        run: xcodebuild -project iSudoku.xcodeproj -scheme iSudoku-iOS -destination 'generic/platform=iOS Simulator' CODE_SIGNING_ALLOWED=NO build

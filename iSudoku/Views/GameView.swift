@@ -5,6 +5,7 @@ private enum ModalKind {
 }
 
 struct GameView: View {
+    @Environment(\.scenePhase) private var scenePhase
     @EnvironmentObject var loc: Localization
     @ObservedObject var engine: GameEngine
     let onExit: () -> Void
@@ -26,36 +27,42 @@ struct GameView: View {
         ZStack {
             BackgroundGlow()
 
-            VStack(spacing: 0) {
-                header
-                    .padding(.horizontal, 16)
-                    .padding(.top, 8)
+            ScrollView {
+                VStack(spacing: 0) {
+                    header
+                        .padding(.horizontal, 16)
+                        .padding(.top, 8)
 
-                Spacer(minLength: 12)
+                    Spacer(minLength: 12)
 
-                SudokuGridView(
-                    cells: engine.cells,
-                    selectedIndex: engine.selectedIndex,
-                    shakeTokens: shakeTokens,
-                    onCellTap: handleTap
-                )
-                .padding(.horizontal, 16)
-
-                Spacer(minLength: 14)
-
-                actionRow
+                    SudokuGridView(
+                        cells: engine.cells,
+                        selectedIndex: engine.selectedIndex,
+                        shakeTokens: shakeTokens,
+                        onCellTap: handleTap
+                    )
                     .padding(.horizontal, 16)
 
-                NumberPadView(
-                    remainingCounts: (1...9).map { engine.remainingCount(for: $0) },
-                    notesMode: engine.notesMode,
-                    onDigit: handleDigit,
-                    onErase: handleErase
-                )
-                .padding(.horizontal, 16)
-                .padding(.top, 14)
-                .padding(.bottom, 16)
+                    Spacer(minLength: 14)
+
+                    actionRow
+                        .padding(.horizontal, 16)
+
+                    NumberPadView(
+                        remainingCounts: (1...9).map { engine.remainingCount(for: $0) },
+                        notesMode: engine.notesMode,
+                        onDigit: handleDigit,
+                        onErase: handleErase
+                    )
+                    .padding(.horizontal, 16)
+                    .padding(.top, 14)
+                    .padding(.bottom, 16)
+                }
+                .frame(maxWidth: 560)
+                .frame(maxWidth: .infinity)
             }
+            .disabled(modal != .none)
+            .accessibilityHidden(modal != .none)
 
             if let message = toastMessage {
                 VStack {
@@ -101,7 +108,16 @@ struct GameView: View {
                 EmptyView()
             }
         }
-        .onAppear { persist() }
+        .onAppear { if scenePhase == .active { engine.resume() }; persist() }
+        .onDisappear { engine.pause(); persist() }
+        .onChange(of: scenePhase) { phase in
+            if phase == .active && modal == .none { engine.resume() }
+            else { engine.pause(); persist() }
+        }
+        .onChange(of: modal) { value in
+            if value == .none && scenePhase == .active { engine.resume() }
+            else { engine.pause(); persist() }
+        }
     }
 
     // MARK: - Header
@@ -111,10 +127,11 @@ struct GameView: View {
             Button(action: { persist(); onExit() }) {
                 Image(systemName: "chevron.left")
                     .foregroundColor(Theme.text)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 44, height: 44)
                     .background(Circle().fill(Theme.bgPanel2))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(loc.t("backToMenu"))
 
             HStack(spacing: 0) {
                 if let level = engine.challengeLevel {
@@ -133,10 +150,11 @@ struct GameView: View {
             Button(action: { modal = .confirmRestart }) {
                 Image(systemName: "arrow.clockwise")
                     .foregroundColor(Theme.text)
-                    .frame(width: 34, height: 34)
+                    .frame(width: 44, height: 44)
                     .background(Circle().fill(Theme.bgPanel2))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(loc.t("restart"))
         }
     }
 
@@ -157,7 +175,7 @@ struct GameView: View {
                 label: loc.t("notes"),
                 active: engine.notesMode,
                 disabled: false,
-                action: { engine.toggleNotesMode() }
+                action: { engine.toggleNotesMode(); persist() }
             )
             actionButton(
                 icon: "arrow.uturn.backward",

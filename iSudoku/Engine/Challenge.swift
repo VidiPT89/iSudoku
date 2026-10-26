@@ -21,6 +21,7 @@ let challengeLevelsAhead = 9
 
 /// Target clue count for a level, clamped so the ladder plateaus at the expert floor.
 func cluesForLevel(_ level: Int) -> Int {
+    if level >= 36 { return challengeMinClues }
     let n = max(1, level)
     let target = Int(round(Double(challengeStartClues) - Double(n - 1) * challengeCluesPerLevel))
     return min(challengeStartClues, max(challengeMinClues, target))
@@ -107,7 +108,12 @@ final class ChallengeStore {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode(ChallengeProgress.self, from: data)
         else { return ChallengeProgress() }
-        return decoded
+        guard decoded.highestUnlocked >= 1, decoded.highestUnlocked < Int.max - 100 else { return ChallengeProgress() }
+        return ChallengeProgress(
+            highestUnlocked: decoded.highestUnlocked,
+            stars: decoded.stars.filter { $0.key >= 1 && $0.key < decoded.highestUnlocked && (1...3).contains($0.value) },
+            bestTime: decoded.bestTime.filter { $0.key >= 1 && $0.key < decoded.highestUnlocked && $0.value.isFinite && $0.value >= 0 }
+        )
     }
 
     func save(_ progress: ChallengeProgress) {

@@ -33,7 +33,8 @@ final class GameEngine: ObservableObject {
     @Published private(set) var hintsUsed = 0
     @Published private(set) var wrongMoves = 0
     @Published private(set) var challengeLevel: Int? = nil
-    private(set) var startedAt = Date()
+    private var elapsedBeforeRun: Double = 0
+    private var runningSince: TimeInterval? = ProcessInfo.processInfo.systemUptime
 
     var isChallenge: Bool { challengeLevel != nil }
     var maxHints: Int {
@@ -51,7 +52,16 @@ final class GameEngine: ObservableObject {
     var canUndo: Bool { !undoStack.isEmpty }
 
     var elapsedSeconds: Double {
-        Date().timeIntervalSince(startedAt)
+        elapsedBeforeRun + (runningSince.map { max(0, ProcessInfo.processInfo.systemUptime - $0) } ?? 0)
+    }
+
+    func pause() {
+        elapsedBeforeRun = elapsedSeconds
+        runningSince = nil
+    }
+
+    func resume() {
+        if runningSince == nil && !isWon { runningSince = ProcessInfo.processInfo.systemUptime }
     }
 
     var isWon: Bool {
@@ -90,7 +100,8 @@ final class GameEngine: ObservableObject {
         moves = 0
         hintsUsed = 0
         wrongMoves = 0
-        startedAt = Date()
+        elapsedBeforeRun = 0
+        runningSince = ProcessInfo.processInfo.systemUptime
         rebuildCells()
     }
 
@@ -117,11 +128,12 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func enterDigit(_ digit: Int) -> SudokuResult {
-        guard let index = selectedIndex else { return .ignored }
+        guard let index = selectedIndex, (0..<81).contains(index) else { return .ignored }
         guard !givenMask[index] else { return .ignored }
         guard (1...9).contains(digit) else { return .ignored }
 
         if notesMode {
+            guard values[index] == 0 else { return .ignored }
             let had = notes[index].contains(digit)
             pushUndo(index)
             if had { notes[index].remove(digit) } else { notes[index].insert(digit) }
@@ -137,12 +149,13 @@ final class GameEngine: ObservableObject {
         moves += 1
         if digit != solution[index] { wrongMoves += 1 }
         rebuildCells()
+        if isWon { pause() }
         return isWon ? .won : .digitEntered(index: index, digit: digit)
     }
 
     @discardableResult
     func clearCell() -> SudokuResult {
-        guard let index = selectedIndex else { return .ignored }
+        guard let index = selectedIndex, (0..<81).contains(index) else { return .ignored }
         guard !givenMask[index] else { return .ignored }
         guard values[index] != 0 || !notes[index].isEmpty else { return .ignored }
         pushUndo(index)
@@ -173,7 +186,7 @@ final class GameEngine: ObservableObject {
         guard hintsUsed < maxHints else { return .hintExhausted }
 
         let target: Int
-        if let selected = selectedIndex, !givenMask[selected], values[selected] != solution[selected] {
+        if let selected = selectedIndex, (0..<81).contains(selected), !givenMask[selected], values[selected] != solution[selected] {
             target = selected
         } else {
             let candidates = (0..<81).filter { !givenMask[$0] && values[$0] != solution[$0] }
@@ -188,6 +201,7 @@ final class GameEngine: ObservableObject {
         moves += 1
         selectedIndex = target
         rebuildCells()
+        if isWon { pause() }
         return isWon ? .won : .hintRevealed(index: target, digit: solution[target])
     }
 
@@ -223,7 +237,9 @@ final class GameEngine: ObservableObject {
         )
     }
 
-    func restore(from snapshot: SudokuSnapshot) {
+    @discardableResult
+    func restore(from snapshot: SudokuSnapshot) -> Bool {
+        guard snapshot.isValid else { return false }
         difficulty = Difficulty(rawValue: snapshot.difficulty) ?? .easy
         challengeLevel = snapshot.challengeLevel
         givenMask = snapshot.given.map { $0 != 0 }
@@ -236,8 +252,10 @@ final class GameEngine: ObservableObject {
         moves = snapshot.moves
         hintsUsed = snapshot.hintsUsed
         wrongMoves = snapshot.wrongMoves ?? 0
-        startedAt = Date().addingTimeInterval(-snapshot.elapsedSeconds)
+        elapsedBeforeRun = snapshot.elapsedSeconds
+        runningSince = ProcessInfo.processInfo.systemUptime
         rebuildCells()
+        return true
     }
 }
 
@@ -254,4 +272,21 @@ struct SudokuSnapshot: Codable {
     var wrongMoves: Int? = nil
     var challengeLevel: Int? = nil
     var elapsedSeconds: Double
+
+    var isValid: Bool {
+        guard let band = Difficulty(rawValue: difficulty),
+              given.count == 81, given.allSatisfy({ (0...1).contains($0) }),
+              solution.count == 81, solution.allSatisfy({ (1...9).contains($0) }),
+              values.count == 81, values.allSatisfy({ (0...9).contains($0) }),
+              notes.count == 81, notes.allSatisfy({ $0.allSatisfy { (1...9).contains($0) } }),
+              selectedIndex.map({ (0..<81).contains($0) }) ?? true,
+              moves >= 0, hintsUsed >= 0, (wrongMoves ?? 0) >= 0,
+              elapsedSeconds.isFinite, elapsedSeconds >= 0, elapsedSeconds < Double(Int.max / 1000),
+              SudokuSolver.findConflictIndices(solution).isEmpty,
+              (0..<81).allSatisfy({ given[$0] == 0 || values[$0] == solution[$0] }) else { return false }
+        if let level = challengeLevel {
+            guard level >= 1, level < Int.max - 100, band == bandForLevel(level) else { return false }
+        }
+        return hintsUsed <= band.maxHints
+    }
 }

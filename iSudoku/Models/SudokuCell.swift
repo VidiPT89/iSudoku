@@ -24,15 +24,6 @@ enum Difficulty: String, CaseIterable, Codable {
         }
     }
 
-    var maxClues: Int {
-        switch self {
-        case .easy: return 45
-        case .medium: return 36
-        case .hard: return 30
-        case .expert: return 25
-        }
-    }
-
     var maxHints: Int {
         switch self {
         case .easy: return 3

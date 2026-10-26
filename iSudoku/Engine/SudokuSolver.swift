@@ -36,6 +36,8 @@ enum SudokuSolver {
     /// Counts solutions up to `cap`, stopping early once reached — used to verify a dug
     /// puzzle still has exactly one solution without paying for a full enumeration.
     static func countSolutions(_ grid: [Int], cap: Int = 2) -> Int {
+        guard grid.count == 81, grid.allSatisfy({ (0...9).contains($0) }),
+              cap > 0, findConflictIndices(grid).isEmpty else { return 0 }
         var count = 0
         var working = grid
 
@@ -45,13 +47,11 @@ enum SudokuSolver {
                 return count >= cap
             }
             if cell.candidates.isEmpty { return false }
-            let row = cell.index / 9, col = cell.index % 9
             for digit in cell.candidates {
                 working[cell.index] = digit
                 if backtrack() { return true }
             }
             working[cell.index] = 0
-            _ = row; _ = col
             return false
         }
 

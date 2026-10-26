@@ -22,7 +22,7 @@ enum SudokuGenerator {
         return false
     }
 
-    static func generate(_ difficulty: Difficulty, targetClues: Int? = nil, seed: UInt64? = nil) -> GeneratedPuzzle {
+    static func generate(_ difficulty: Difficulty, targetClues: Int? = nil) -> GeneratedPuzzle {
         var full = [Int](repeating: 0, count: 81)
         _ = fillGrid(&full)
         let solution = full

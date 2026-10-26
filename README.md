@@ -6,11 +6,11 @@
 
 ## 📦 What's Inside
 
-- 🎚️ Three difficulty levels — **Easy** (40–45 clues), **Medium** (32–36 clues) and **Hard** (26–30 clues)
+- 🎚️ Three difficulty levels — **Easy** (target: 40 clues), **Medium** (target: 32) and **Hard** (target: 26)
 - ✅ Uniquely-solvable puzzles — clues are removed one at a time, keeping each removal only if the puzzle still solves to exactly one grid
 - ✏️ Pencil-mark notes mode — jot down candidate digits in a cell instead of committing a final value
 - 🚫 Live conflict detection — placing a digit that already exists in the same row, column or 3x3 box highlights every conflicting cell
-- 💡 Limited hints per game (3/4/5 by difficulty) that reveal the correct value for the selected cell — or a random incorrect one if nothing's selected — and ↩️ unlimited undo
+- 💡 Limited hints per game (3/4/5 by difficulty) that reveal the correct value for the selected cell — or a random incorrect one if nothing's selected — and ↩️ undo for the last 200 moves in the current session
 - 🎬 Smooth SwiftUI animations on digit entry and hint reveal
 - 💾 Autosaves mid-game, with a "Continue Game" option from the main menu
 - 🏆 A local best-time / fewest-hints leaderboard per difficulty, stored on-device (no backend), shown after a win
@@ -26,13 +26,13 @@
 ![iOS](https://img.shields.io/badge/iOS-16%2B-000000?style=flat&logo=apple&logoColor=white)
 ![macOS](https://img.shields.io/badge/macOS-13%2B-000000?style=flat&logo=apple&logoColor=white)
 ![xcodegen](https://img.shields.io/badge/xcodegen-project.yml-blue?style=flat)
-![XCTest](https://img.shields.io/badge/XCTest-unit%20tests-blue?style=flat)
+![Tests](https://img.shields.io/badge/Swift-regression%20tests-blue?style=flat)
 
 ## 🏗️ Project Structure
 
 ```
 iSudoku/
-├── project.yml               # xcodegen config — iSudoku-iOS, iSudoku-macOS and iSudokuTests targets
+├── project.yml               # xcodegen config — iSudoku-iOS and iSudoku-macOS targets
 ├── iSudoku/                   # Shared SwiftUI source for both app targets
 │   ├── iSudokuApp.swift        # App entry point
 │   ├── Theme.swift             # ividi.dev-matched color tokens
@@ -57,7 +57,8 @@ iSudoku/
 │   │   ├── Modals.swift                 # Win / confirm modals + leaderboard block
 │   │   └── BackgroundGlow.swift          # Shared theme components
 │   └── Assets.xcassets/          # App icon (all iOS/macOS sizes) + accent color
-├── iSudokuTests/              # XCTest unit tests (generator, solver, engine)
+├── Tests/                     # Executable regression suites
+├── scripts/test.sh           # Compiles and runs the Swift suites
 ├── LICENSE
 └── README.md
 ```
@@ -106,7 +107,7 @@ xcodegen generate
 open iSudoku.xcodeproj
 ```
 
-Pick the **iSudoku-iOS** scheme for iPhone/iPad (Simulator or device) or **iSudoku-macOS** for a native Mac app. Both targets share the exact same SwiftUI source. To run the unit tests, select the **iSudokuTests** target (or `Product > Test` / `xcodebuild test`) from either app scheme.
+Pick the **iSudoku-iOS** scheme for iPhone/iPad (Simulator or device) or **iSudoku-macOS** for a native Mac app. Both targets share the exact same SwiftUI source. Run the regression suites with `./scripts/test.sh` (requires the Xcode command-line tools). There is no XCTest target.
 
 ## 🔊 Sound
 
@@ -118,8 +119,16 @@ Digit entry, conflict and win feedback use `AudioServicesPlaySystemSound` (Audio
 - Correcting a wrong entry counts as a valid hint target, not just filling in a blank cell
 - Undo restores both the previous value and the previous notes for a cell, and un-spends a hint if the move it's undoing was one
 - Language, in-progress games and the local leaderboard are all stored locally via `UserDefaults`, so they persist between visits
-- This is an independent Swift codebase, part of a small triplet of from-scratch Sudoku implementations across Android, iOS/macOS and the web — no code is shared between them
+- This is an independent Swift codebase, part of a pair of from-scratch Sudoku implementations for iOS/macOS and the web — no code is shared between the native and web apps
 
 ---
 
 Developed by **David Arsénio Martins** — *"Vidi"*
+
+## Verification and behaviour (2026-10-26)
+
+- Challenge mode progressively reduces the target to 23 clues and awards 1–3 stars based on mistakes and hints. A generator may retain more clues to preserve a unique solution; clue count alone is not a human difficulty rating.
+- Time pauses outside active play, during restart confirmation and after victory.
+- Invalid saved games are rejected safely; completed games are not offered as resumable games.
+- Undo history is held in memory for up to 200 moves and is not restored after resuming a saved game.
+- The Android implementation was retired at the owner's request.

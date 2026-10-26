@@ -16,16 +16,17 @@ enum Leaderboard {
         guard let data = UserDefaults.standard.data(forKey: key),
               let decoded = try? JSONDecoder().decode([String: LeaderboardEntry].self, from: data)
         else { return [:] }
-        return decoded
+        return decoded.mapValues { entry in
+            LeaderboardEntry(
+                bestTimeSeconds: entry.bestTimeSeconds.flatMap { $0.isFinite && $0 >= 0 ? $0 : nil },
+                bestHints: entry.bestHints.flatMap { $0 >= 0 ? $0 : nil }
+            )
+        }
     }
 
     private static func saveAll(_ entries: [String: LeaderboardEntry]) {
         guard let data = try? JSONEncoder().encode(entries) else { return }
         UserDefaults.standard.set(data, forKey: key)
-    }
-
-    static func entry(for difficulty: Difficulty) -> LeaderboardEntry {
-        loadAll()[difficulty.rawValue] ?? LeaderboardEntry()
     }
 
     /// Records a completed game, keeping whichever of the previous best / new result is better
@@ -54,7 +55,4 @@ enum Leaderboard {
         return (current, newBestTime, newBestHints)
     }
 
-    static func clear() {
-        UserDefaults.standard.removeObject(forKey: key)
-    }
 }

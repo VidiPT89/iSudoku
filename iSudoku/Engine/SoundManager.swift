@@ -20,15 +20,12 @@ enum SoundManager {
         case win = 1025         // more elaborate multi-tone sound
     }
 
-    static var isEnabled = true
-
     static func digitEnter() { play(.digitEnter) }
     static func conflict() { play(.conflict) }
     static func hint() { play(.hint) }
     static func win() { play(.win) }
 
     private static func play(_ sound: SystemSoundID_) {
-        guard isEnabled else { return }
         AudioServicesPlaySystemSound(SystemSoundID(sound.rawValue))
     }
 }

@@ -55,7 +55,7 @@ struct RootView: View {
                     engine: engine,
                     onExit: {
                         SaveStore.save(engine)
-                        hasSave = true
+                        hasSave = SaveStore.hasSave()
                         let dest: AppScreen = engine.isChallenge ? .levels : .menu
                         withAnimation(Theme.ease) { screen = dest }
                     },
@@ -97,6 +97,7 @@ struct RootView: View {
     }
 
     private func openLevels() {
+        hasSave = SaveStore.hasSave()
         challengeProgress = challengeStore.load()
         withAnimation(Theme.ease) { screen = .levels }
     }
@@ -112,8 +113,8 @@ struct RootView: View {
         if let level = engine.challengeLevel {
             engine.resetChallenge(level: level)
         } else {
-            engine.reset(difficulty: difficultyStore.value)
+            engine.reset(difficulty: engine.difficulty)
         }
-        SaveStore.clear()
+        SaveStore.save(engine)
     }
 }

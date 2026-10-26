@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Endless-ladder picker. Mirrors the Droid/Web layout: back arrow + title, a
+/// Endless-ladder picker. Mirrors the Web layout: back arrow + title, a
 /// "level reached / stars" summary, an optional "show earlier" button that
 /// only walks the window backwards, and a grid of level tiles that colour
 /// themselves by band and light up their stars as the player earns them.

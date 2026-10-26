@@ -32,6 +32,7 @@ final class Localization: ObservableObject {
 
     private let strings: [Lang: [String: String]] = [
         .pt: [
+            "row": "Linha", "column": "Coluna", "emptyCell": "vazia", "fixedCell": "fixa", "conflictCell": "em conflito",
             "tapToContinue": "Toque para continuar",
             "developedBy": "Desenvolvido por",
 
@@ -103,6 +104,7 @@ final class Localization: ObservableObject {
             "htpCloseButton": "Entendido",
         ],
         .en: [
+            "row": "Row", "column": "Column", "emptyCell": "empty", "fixedCell": "given", "conflictCell": "conflicting",
             "tapToContinue": "Tap to continue",
             "developedBy": "Developed by",
 

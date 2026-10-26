@@ -1,13 +1,14 @@
 import SwiftUI
 
 struct NumberPadView: View {
+    @EnvironmentObject var loc: Localization
     let remainingCounts: [Int]
     let notesMode: Bool
     let onDigit: (Int) -> Void
     let onErase: () -> Void
 
     var body: some View {
-        HStack(spacing: 6) {
+        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 6), count: 5), spacing: 6) {
             ForEach(1...9, id: \.self) { digit in
                 key(digit)
             }
@@ -16,10 +17,11 @@ struct NumberPadView: View {
                     .font(.system(size: 16))
                     .foregroundColor(Theme.textDim)
                     .frame(maxWidth: .infinity)
-                    .aspectRatio(0.75, contentMode: .fit)
+                    .frame(height: 44)
                     .background(RoundedRectangle(cornerRadius: 8).fill(Theme.bgPanel2))
             }
             .buttonStyle(.plain)
+            .accessibilityLabel(loc.t("erase"))
         }
     }
 
@@ -30,7 +32,7 @@ struct NumberPadView: View {
                 .font(.system(size: 17, weight: .semibold))
                 .foregroundColor(disabled ? Theme.textFaint : Theme.text)
                 .frame(maxWidth: .infinity)
-                .aspectRatio(0.75, contentMode: .fit)
+                .frame(height: 44)
                 .background(RoundedRectangle(cornerRadius: 8).fill(Theme.bgPanel2))
         }
         .buttonStyle(.plain)

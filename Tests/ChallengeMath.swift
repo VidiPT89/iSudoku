@@ -1,9 +1,4 @@
-// Runnable check for the Swift challenge ladder. No XCTest, no scheme wiring:
-//   swift run-tests/ChallengeMath.swift
-// or the one-shot:
-//   swift ../iSudoku/Engine/Challenge.swift Tests/ChallengeMath.swift
-//
-// Mirrors SudokuWeb/tests/challenge.test.js so the two implementations stay in step.
+// Run both Swift regression suites with ./scripts/test.sh
 
 import Foundation
 

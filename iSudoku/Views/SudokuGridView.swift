@@ -51,6 +51,7 @@ struct SudokuGridView: View {
 }
 
 private struct SudokuCellView: View {
+    @EnvironmentObject var loc: Localization
     let cell: SudokuCell
     let isSelected: Bool
     let isPeer: Bool
@@ -68,6 +69,17 @@ private struct SudokuCellView: View {
         if isSameNumber { return Theme.sameNumberHighlightBg }
         if isPeer { return Theme.peerHighlightBg }
         return Theme.bgPanel2
+    }
+
+    private var accessibilityDescription: String {
+        var parts = [cell.value.map { String($0) } ?? loc.t("emptyCell")]
+        if cell.isGiven { parts.append(loc.t("fixedCell")) }
+        if cell.isConflict { parts.append(loc.t("conflictCell")) }
+        if !cell.notes.isEmpty {
+            let digits = cell.notes.sorted().map { String($0) }.joined(separator: ", ")
+            parts.append(loc.t("notes") + ": " + digits)
+        }
+        return parts.joined(separator: ", ")
     }
 
     var body: some View {
@@ -88,6 +100,11 @@ private struct SudokuCellView: View {
         .offset(x: shakeOffset)
         .contentShape(Rectangle())
         .onTapGesture(perform: onTap)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel("\(loc.t("row")) \(cell.row + 1), \(loc.t("column")) \(cell.col + 1)")
+        .accessibilityValue(accessibilityDescription)
+        .accessibilityAddTraits(isSelected ? [.isButton, .isSelected] : .isButton)
+        .accessibilityAction { onTap() }
         .onChange(of: shakeToken) { _ in
             guard shakeToken > 0 else { return }
             let anim = Animation.linear(duration: 0.06)
