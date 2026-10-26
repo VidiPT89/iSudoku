@@ -29,9 +29,9 @@ private struct MiniGrid: View {
                     if showNotes && r == 1 && c == 1 {
                         Text("1 2\n4 5").font(.system(size: 5)).foregroundColor(Theme.noteText)
                     } else if r == 1 && c == 1 {
-                        Text(isConflictCell ? "" : "7")
+                        Text("7")
                             .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(isConflictCell ? Theme.conflictText : Theme.userDigit)
+                            .foregroundColor(Theme.userDigit)
                     } else if isConflictCell {
                         Text("7").font(.system(size: 11, weight: .bold)).foregroundColor(Theme.conflictText)
                     }
@@ -94,6 +94,11 @@ struct HowToPlayView: View {
                                 Text(loc.t("htpNotesBody")).font(.system(size: 14)).foregroundColor(Theme.textDim)
                                 MiniGrid(showNotes: true)
                             }
+                        }
+
+                        VStack(alignment: .leading, spacing: 10) {
+                            Text(loc.t("htpChallengeTitle")).font(.system(size: 16, weight: .bold)).foregroundColor(Theme.accent)
+                            Text(loc.t("htpChallengeBody")).font(.system(size: 14)).foregroundColor(Theme.textDim)
                         }
 
                         VStack(alignment: .leading, spacing: 12) {

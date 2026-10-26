@@ -58,6 +58,8 @@ check(progress.bestTime[1] == 90, "best time must improve")
 check(progress.starsAt(2) == 2, "better replay star count is kept")
 check(progress.totalStars == 5, "totalStars sums per-level bests")
 
+check(starsFor(wrongMoves: Int.max, hintsUsed: Int.max) == 1, "extreme counters must not overflow")
+
 print("ChallengeMath.swift: all assertions passed")
 }
 }

@@ -27,39 +27,48 @@ struct GameView: View {
         ZStack {
             BackgroundGlow()
 
-            ScrollView {
-                VStack(spacing: 0) {
-                    header
+            GeometryReader { geometry in
+                ScrollView {
+                    VStack(spacing: 0) {
+                        header
+                            .padding(.horizontal, 16)
+                            .padding(.top, 8)
+
+                        if engine.isChallenge {
+                            Text("\(loc.t("mistakes")): \(engine.wrongMoves)")
+                                .font(.system(size: 12, weight: .medium))
+                                .foregroundColor(Theme.textDim)
+                                .padding(.top, 8)
+                        }
+                        Spacer(minLength: 12)
+
+                        SudokuGridView(
+                            cells: engine.cells,
+                            selectedIndex: engine.selectedIndex,
+                            shakeTokens: shakeTokens,
+                            onCellTap: handleTap
+                        )
+                        .frame(maxWidth: min(528, max(240, geometry.size.height - (engine.isChallenge ? 310 : 280))))
                         .padding(.horizontal, 16)
-                        .padding(.top, 8)
 
-                    Spacer(minLength: 12)
+                        Spacer(minLength: 14)
 
-                    SudokuGridView(
-                        cells: engine.cells,
-                        selectedIndex: engine.selectedIndex,
-                        shakeTokens: shakeTokens,
-                        onCellTap: handleTap
-                    )
-                    .padding(.horizontal, 16)
+                        actionRow
+                            .padding(.horizontal, 16)
 
-                    Spacer(minLength: 14)
-
-                    actionRow
+                        NumberPadView(
+                            remainingCounts: (1...9).map { engine.remainingCount(for: $0) },
+                            notesMode: engine.notesMode,
+                            onDigit: handleDigit,
+                            onErase: handleErase
+                        )
                         .padding(.horizontal, 16)
-
-                    NumberPadView(
-                        remainingCounts: (1...9).map { engine.remainingCount(for: $0) },
-                        notesMode: engine.notesMode,
-                        onDigit: handleDigit,
-                        onErase: handleErase
-                    )
-                    .padding(.horizontal, 16)
-                    .padding(.top, 14)
-                    .padding(.bottom, 16)
+                        .padding(.top, 14)
+                        .padding(.bottom, 16)
+                    }
+                    .frame(maxWidth: 560)
+                    .frame(maxWidth: .infinity)
                 }
-                .frame(maxWidth: 560)
-                .frame(maxWidth: .infinity)
             }
             .disabled(modal != .none)
             .accessibilityHidden(modal != .none)

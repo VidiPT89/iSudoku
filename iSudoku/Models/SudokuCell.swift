@@ -1,6 +1,4 @@
-import Foundation
-
-struct SudokuCell: Identifiable, Codable, Equatable {
+struct SudokuCell {
     let row: Int
     let col: Int
     var isGiven: Bool = false
@@ -8,7 +6,6 @@ struct SudokuCell: Identifiable, Codable, Equatable {
     var notes: Set<Int> = []
     var isConflict: Bool = false
 
-    var id: Int { row * 9 + col }
     var boxIndex: Int { (row / 3) * 3 + (col / 3) }
 }
 

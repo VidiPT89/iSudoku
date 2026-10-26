@@ -46,7 +46,7 @@ enum EngineTests {
         engine.hint()
         check(engine.hintsUsed == 1, "hint budget")
         engine.undo()
-        check(engine.hintsUsed == 0 && engine.cells[target].notes == [2], "hint undo restores budget and notes")
+        check(engine.hintsUsed == 1 && engine.cells[target].notes == [2], "hint undo keeps cost and restores notes")
         var timed = original
         timed.elapsedSeconds = 123
         check(engine.restore(from: timed), "valid restore")
@@ -76,6 +76,63 @@ enum EngineTests {
         let finished = engine.elapsedSeconds
         Thread.sleep(forTimeInterval: 0.02)
         check(engine.elapsedSeconds == finished, "victory freezes time")
+        let digit = original.solution[0]
+        let alternate = digit % 9 + 1
+        var blank = original
+        blank.given = Array(repeating: 0, count: 81)
+        blank.values = Array(repeating: 0, count: 81)
+        blank.notes = Array(repeating: [], count: 81)
+        blank.notes[1] = [digit, alternate]
+        for i in [9, 10, 40] { blank.notes[i] = [digit] }
+        blank.undoStack = []
+        engine.restore(from: blank)
+        engine.selectCell(0)
+        engine.enterDigit(digit)
+        check(!engine.cells[1].notes.contains(digit), "row note cleared")
+        check(engine.cells[1].notes.contains(alternate), "other candidate retained")
+        check(!engine.cells[9].notes.contains(digit), "column note cleared")
+        check(!engine.cells[10].notes.contains(digit), "box note cleared")
+        check(engine.cells[40].notes.contains(digit), "unrelated note retained")
+        let data = try! JSONEncoder().encode(engine.makeSnapshot())
+        let saved = try! JSONDecoder().decode(SudokuSnapshot.self, from: data)
+        check(engine.restore(from: saved) && engine.canUndo, "undo history survives JSON roundtrip")
+        engine.undo()
+        check(engine.cells[0].value == nil, "restored undo restores digit")
+        check([1,9,10,40].allSatisfy { engine.cells[$0].notes.contains(digit) }, "restored undo restores peer notes")
+        check(!engine.canUndo, "history consumed")
+        for _ in 0..<engine.maxHints { engine.hint(); engine.undo() }
+        check(engine.hintsUsed == engine.maxHints, "undo cannot refund hints")
+        check(engine.hint() == .hintExhausted, "hint budget cannot be bypassed")
+        let badEntries = [
+            UndoEntry(index: 81, prevValue: nil, prevNotes: [], peerNotes: []),
+            UndoEntry(index: 0, prevValue: 10, prevNotes: [], peerNotes: []),
+            UndoEntry(index: 0, prevValue: nil, prevNotes: [0], peerNotes: []),
+            UndoEntry(index: 0, prevValue: nil, prevNotes: [], peerNotes: [NoteBackup(index: 40, notes: [digit])])
+        ]
+        for bad in badEntries {
+            var invalid = blank
+            invalid.undoStack = [bad]
+            check(!invalid.isValid, "invalid history rejected")
+        }
+        var legacy = blank
+        legacy.undoStack = nil
+        check(engine.restore(from: legacy) && !engine.canUndo, "legacy saves still load")
+        engine.selectCell(0)
+        engine.toggleNotesMode()
+        for _ in 0..<205 { engine.enterDigit(1) }
+        check(engine.makeSnapshot().undoStack?.count == 200, "history bounded")
+        let boundedData = try! JSONEncoder().encode(engine.makeSnapshot())
+        engine.restore(from: try! JSONDecoder().decode(SudokuSnapshot.self, from: boundedData))
+        for _ in 0..<200 { engine.undo() }
+        check(!engine.canUndo && engine.cells[0].notes.contains(1), "bounded history roundtrip")
+        var solved = blank
+        solved.values = original.solution
+        engine.restore(from: solved)
+        engine.selectCell(0)
+        check(engine.enterDigit(alternate) == .ignored, "won game is immutable")
+        check(engine.clearCell() == .ignored, "cannot clear won board")
+        check(engine.undo() == .ignored, "cannot undo a recorded win")
+        check(engine.hint() == .ignored, "cannot spend hint after win")
         print("EngineTests.swift: \(checks) checks passed")
     }
 }

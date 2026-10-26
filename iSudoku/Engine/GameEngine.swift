@@ -13,11 +13,16 @@ enum SudokuResult: Equatable {
     case ignored
 }
 
-private struct UndoEntry {
+struct NoteBackup: Codable {
+    let index: Int
+    let notes: Set<Int>
+}
+
+struct UndoEntry: Codable {
     let index: Int
     let prevValue: Int?
     let prevNotes: Set<Int>
-    let wasHint: Bool
+    let peerNotes: [NoteBackup]
 }
 
 /// Owns the full mutable game state for one puzzle: cells, selection, notes-mode,
@@ -27,7 +32,7 @@ private struct UndoEntry {
 final class GameEngine: ObservableObject {
     @Published private(set) var difficulty: Difficulty = .easy
     @Published private(set) var cells: [SudokuCell] = []
-    @Published var selectedIndex: Int?
+    @Published private(set) var selectedIndex: Int?
     @Published private(set) var notesMode = false
     @Published private(set) var moves = 0
     @Published private(set) var hintsUsed = 0
@@ -128,6 +133,7 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func enterDigit(_ digit: Int) -> SudokuResult {
+        guard !isWon else { return .ignored }
         guard let index = selectedIndex, (0..<81).contains(index) else { return .ignored }
         guard !givenMask[index] else { return .ignored }
         guard (1...9).contains(digit) else { return .ignored }
@@ -143,7 +149,7 @@ final class GameEngine: ObservableObject {
         }
 
         if values[index] == digit { return .ignored }
-        pushUndo(index)
+        pushUndo(index, digit: digit)
         values[index] = digit
         notes[index].removeAll()
         moves += 1
@@ -155,6 +161,7 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func clearCell() -> SudokuResult {
+        guard !isWon else { return .ignored }
         guard let index = selectedIndex, (0..<81).contains(index) else { return .ignored }
         guard !givenMask[index] else { return .ignored }
         guard values[index] != 0 || !notes[index].isEmpty else { return .ignored }
@@ -168,11 +175,12 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func undo() -> SudokuResult {
+        guard !isWon else { return .ignored }
         guard let entry = undoStack.popLast() else { return .ignored }
         values[entry.index] = entry.prevValue ?? 0
         notes[entry.index] = entry.prevNotes
         selectedIndex = entry.index
-        if entry.wasHint && hintsUsed > 0 { hintsUsed -= 1 }
+        for peer in entry.peerNotes { notes[peer.index] = peer.notes }
         rebuildCells()
         return .undone
     }
@@ -183,6 +191,7 @@ final class GameEngine: ObservableObject {
 
     @discardableResult
     func hint() -> SudokuResult {
+        guard !isWon else { return .ignored }
         guard hintsUsed < maxHints else { return .hintExhausted }
 
         let target: Int
@@ -194,7 +203,7 @@ final class GameEngine: ObservableObject {
             target = picked
         }
 
-        pushUndo(target, wasHint: true)
+        pushUndo(target, digit: solution[target])
         values[target] = solution[target]
         notes[target].removeAll()
         hintsUsed += 1
@@ -205,12 +214,23 @@ final class GameEngine: ObservableObject {
         return isWon ? .won : .hintRevealed(index: target, digit: solution[target])
     }
 
-    private func pushUndo(_ index: Int, wasHint: Bool = false) {
+    static func arePeers(_ a: Int, _ b: Int) -> Bool {
+        a != b && (a / 9 == b / 9 || a % 9 == b % 9 || (a / 27 == b / 27 && (a % 9) / 3 == (b % 9) / 3))
+    }
+
+    private func pushUndo(_ index: Int, digit: Int? = nil) {
+        var peerNotes: [NoteBackup] = []
+        if let digit = digit {
+            for peer in 0..<81 where !givenMask[peer] && Self.arePeers(index, peer) && notes[peer].contains(digit) {
+                peerNotes.append(NoteBackup(index: peer, notes: notes[peer]))
+                notes[peer].remove(digit)
+            }
+        }
         let entry = UndoEntry(
             index: index,
             prevValue: values[index] == 0 ? nil : values[index],
             prevNotes: notes[index],
-            wasHint: wasHint
+            peerNotes: peerNotes
         )
         undoStack.append(entry)
         if undoStack.count > 200 { undoStack.removeFirst() }
@@ -233,7 +253,8 @@ final class GameEngine: ObservableObject {
             hintsUsed: hintsUsed,
             wrongMoves: wrongMoves,
             challengeLevel: challengeLevel,
-            elapsedSeconds: elapsedSeconds
+            elapsedSeconds: elapsedSeconds,
+            undoStack: undoStack
         )
     }
 
@@ -246,7 +267,7 @@ final class GameEngine: ObservableObject {
         solution = snapshot.solution
         values = snapshot.values
         notes = snapshot.notes.map { Set($0) }
-        undoStack = []
+        undoStack = snapshot.undoStack ?? []
         selectedIndex = snapshot.selectedIndex
         notesMode = snapshot.notesMode
         moves = snapshot.moves
@@ -272,6 +293,7 @@ struct SudokuSnapshot: Codable {
     var wrongMoves: Int? = nil
     var challengeLevel: Int? = nil
     var elapsedSeconds: Double
+    var undoStack: [UndoEntry]? = nil
 
     var isValid: Bool {
         guard let band = Difficulty(rawValue: difficulty),
@@ -286,6 +308,17 @@ struct SudokuSnapshot: Codable {
               (0..<81).allSatisfy({ given[$0] == 0 || values[$0] == solution[$0] }) else { return false }
         if let level = challengeLevel {
             guard level >= 1, level < Int.max - 100, band == bandForLevel(level) else { return false }
+        }
+        if let history = undoStack {
+            guard history.count <= 200 else { return false }
+            func editable(_ index: Int) -> Bool { (0..<81).contains(index) && given[index] == 0 }
+            func validNotes(_ notes: Set<Int>) -> Bool { notes.allSatisfy { (1...9).contains($0) } }
+            for entry in history {
+                guard editable(entry.index), entry.prevValue.map({ (1...9).contains($0) }) ?? true,
+                      validNotes(entry.prevNotes), entry.peerNotes.count <= 20,
+                      Set(entry.peerNotes.map { $0.index }).count == entry.peerNotes.count,
+                      entry.peerNotes.allSatisfy({ editable($0.index) && GameEngine.arePeers(entry.index, $0.index) && validNotes($0.notes) }) else { return false }
+            }
         }
         return hintsUsed <= band.maxHints
     }

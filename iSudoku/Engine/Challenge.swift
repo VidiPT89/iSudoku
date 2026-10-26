@@ -44,7 +44,7 @@ func maxHintsForLevel(_ level: Int) -> Int {
 
 /// 3 = flawless, 2 = a few slips, 1 = finished. A mistake and a hint cost the same.
 func starsFor(wrongMoves: Int, hintsUsed: Int) -> Int {
-    let penalty = max(0, wrongMoves) + max(0, hintsUsed)
+    let penalty = min(4, max(0, wrongMoves)) + min(4, max(0, hintsUsed))
     switch penalty {
     case 0: return 3
     case 1...3: return 2
@@ -65,7 +65,6 @@ struct ChallengeProgress: Codable, Equatable {
 }
 
 struct ChallengeOutcome: Equatable {
-    let improvedStars: Bool
     let isNewBestTime: Bool
     let unlockedNext: Bool
     let bestStars: Int
@@ -91,7 +90,6 @@ func applyWin(
     if isNewBestTime { updated.bestTime[level] = elapsedSeconds }
 
     let outcome = ChallengeOutcome(
-        improvedStars: improvedStars,
         isNewBestTime: isNewBestTime,
         unlockedNext: unlockedNext,
         bestStars: max(stars, prevStars),

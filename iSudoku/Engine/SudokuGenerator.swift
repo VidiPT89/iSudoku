@@ -35,10 +35,8 @@ enum SudokuGenerator {
         for idx in order {
             if clues <= floor { break }
             let backup = puzzle[idx]
-            if backup == 0 { continue }
             puzzle[idx] = 0
-            let trial = puzzle
-            let solutions = SudokuSolver.countSolutions(trial, cap: 2)
+            let solutions = SudokuSolver.countSolutions(puzzle, cap: 2)
             if solutions == 1 {
                 clues -= 1
             } else {
