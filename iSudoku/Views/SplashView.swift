@@ -14,6 +14,16 @@ struct SplashView: View {
             VStack(spacing: 22) {
                 Spacer()
 
+                Image("BrandIcon")
+                    .resizable()
+                    .interpolation(.high)
+                    .frame(width: 128, height: 128)
+                    .clipShape(RoundedRectangle(cornerRadius: 29, style: .continuous))
+                    .shadow(color: .black.opacity(0.45), radius: 18, y: 8)
+                    .opacity(appeared ? 1 : 0)
+                    .offset(y: appeared ? 0 : 12)
+                    .accessibilityHidden(true)
+
                 BrandLogo(size: 52)
                     .opacity(appeared ? 1 : 0)
                     .offset(y: appeared ? 0 : 12)
