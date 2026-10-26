@@ -7,6 +7,8 @@ configs:
 settings:
   base:
     DEVELOPMENT_TEAM: S769436W24
+    MARKETING_VERSION: "1.0"
+    CURRENT_PROJECT_VERSION: "1"
 targets:
   iSudoku-iOS:
     type: application
@@ -25,9 +27,13 @@ targets:
           - UIInterfaceOrientationLandscapeRight
         UISupportedInterfaceOrientations~ipad:
           - UIInterfaceOrientationPortrait
+          - UIInterfaceOrientationPortraitUpsideDown
           - UIInterfaceOrientationLandscapeLeft
           - UIInterfaceOrientationLandscapeRight
         CFBundleDisplayName: "iSudoku"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.vidi.iSudoku
@@ -47,6 +53,9 @@ targets:
       path: Generated/Info-macOS.plist
       properties:
         CFBundleDisplayName: "iSudoku"
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        ITSAppUsesNonExemptEncryption: false
         LSApplicationCategoryType: "public.app-category.puzzle-games"
         NSHumanReadableCopyright: "Copyright © 2026 David Arsénio Martins"
     settings:

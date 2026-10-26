@@ -19,7 +19,7 @@ func renderIcon(size: Int) -> CGImage {
     let s = CGFloat(size)
     let cs = CGColorSpaceCreateDeviceRGB()
     let ctx = CGContext(data: nil, width: size, height: size, bitsPerComponent: 8, bytesPerRow: 0,
-                         space: cs, bitmapInfo: CGImageAlphaInfo.premultipliedLast.rawValue)!
+                         space: cs, bitmapInfo: CGImageAlphaInfo.noneSkipLast.rawValue)! // no alpha: App Store icons must be opaque
     ctx.translateBy(x: 0, y: s); ctx.scaleBy(x: 1, y: -1)
 
     // Background — square; Xcode/AppKit apply the platform mask (rounded corners on iOS/mac).

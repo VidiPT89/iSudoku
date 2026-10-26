@@ -72,6 +72,7 @@ final class Localization: ObservableObject {
             "row": "Linha", "column": "Coluna", "emptyCell": "vazia", "fixedCell": "fixa", "conflictCell": "em conflito",
             "tapToContinue": "Toque para continuar",
             "developedBy": "Desenvolvido por",
+            "privacy": "Política de Privacidade",
 
             "menuTag": "PUZZLE DE LÓGICA",
             "menuSubtitle": "Preenche a grelha 9x9. Sem repetições em linhas, colunas ou blocos.",
@@ -171,6 +172,7 @@ final class Localization: ObservableObject {
             "row": "Row", "column": "Column", "emptyCell": "empty", "fixedCell": "given", "conflictCell": "conflicting",
             "tapToContinue": "Tap to continue",
             "developedBy": "Developed by",
+            "privacy": "Privacy Policy",
 
             "menuTag": "LOGIC PUZZLE",
             "menuSubtitle": "Fill the 9x9 grid. No repeats in any row, column or box.",

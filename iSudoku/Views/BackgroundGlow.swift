@@ -70,6 +70,8 @@ struct FooterCredits: View {
                 .foregroundColor(Theme.accent)
             Link("GitHub", destination: URL(string: "https://github.com/VidiPT89/")!)
                 .foregroundColor(Theme.accent)
+            Link(loc.t("privacy"), destination: URL(string: "https://github.com/VidiPT89/iSudoku/blob/main/PRIVACY.md")!)
+                .foregroundColor(Theme.textDim)
         }
         .font(.system(size: 12))
         .padding(.bottom, 14)
