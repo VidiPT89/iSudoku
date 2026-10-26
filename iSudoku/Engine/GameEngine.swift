@@ -38,6 +38,8 @@ final class GameEngine: ObservableObject {
     @Published private(set) var hintsUsed = 0
     @Published private(set) var wrongMoves = 0
     @Published private(set) var challengeLevel: Int? = nil
+    /// Explanation of the latest hint, until the board changes again.
+    @Published private(set) var lastHint: SingleStep?
     private var elapsedBeforeRun: Double = 0
     private var runningSince: TimeInterval? = ProcessInfo.processInfo.systemUptime
 
@@ -100,6 +102,7 @@ final class GameEngine: ObservableObject {
         values = generated.given
         notes = [Set<Int>](repeating: [], count: 81)
         undoStack = []
+        lastHint = nil
         selectedIndex = nil
         notesMode = false
         moves = 0
@@ -140,6 +143,7 @@ final class GameEngine: ObservableObject {
 
         if notesMode {
             guard values[index] == 0 else { return .ignored }
+            lastHint = nil
             let had = notes[index].contains(digit)
             pushUndo(index)
             if had { notes[index].remove(digit) } else { notes[index].insert(digit) }
@@ -149,6 +153,7 @@ final class GameEngine: ObservableObject {
         }
 
         if values[index] == digit { return .ignored }
+        lastHint = nil
         pushUndo(index, digit: digit)
         values[index] = digit
         notes[index].removeAll()
@@ -165,6 +170,7 @@ final class GameEngine: ObservableObject {
         guard let index = selectedIndex, (0..<81).contains(index) else { return .ignored }
         guard !givenMask[index] else { return .ignored }
         guard values[index] != 0 || !notes[index].isEmpty else { return .ignored }
+        lastHint = nil
         pushUndo(index)
         values[index] = 0
         notes[index].removeAll()
@@ -177,6 +183,7 @@ final class GameEngine: ObservableObject {
     func undo() -> SudokuResult {
         guard !isWon else { return .ignored }
         guard let entry = undoStack.popLast() else { return .ignored }
+        lastHint = nil
         values[entry.index] = entry.prevValue ?? 0
         notes[entry.index] = entry.prevNotes
         selectedIndex = entry.index
@@ -189,26 +196,39 @@ final class GameEngine: ObservableObject {
         notesMode.toggle()
     }
 
+    /// Fixes a wrong entry first; otherwise fills a cell through the simplest deduction
+    /// available (a single), explained in `lastHint`, and only reveals blindly when none applies.
     @discardableResult
     func hint() -> SudokuResult {
         guard !isWon else { return .ignored }
         guard hintsUsed < maxHints else { return .hintExhausted }
 
+        let editable = { (i: Int) in !self.givenMask[i] && self.values[i] != self.solution[i] }
+        // Wrong entries are left out so every deduction follows from correct digits only.
+        let board = (0..<81).map { values[$0] == solution[$0] ? values[$0] : 0 }
         let target: Int
-        if let selected = selectedIndex, (0..<81).contains(selected), !givenMask[selected], values[selected] != solution[selected] {
+        var step: SingleStep?
+        if let selected = selectedIndex, (0..<81).contains(selected), editable(selected) {
             target = selected
+            if values[selected] == 0 { step = SudokuSolver.findSingle(board, onlyIndex: selected) }
+        } else if let wrong = (0..<81).filter({ editable($0) && values[$0] != 0 }).randomElement() {
+            target = wrong
+        } else if let single = SudokuSolver.findSingle(board) {
+            target = single.index
+            step = single
         } else {
-            let candidates = (0..<81).filter { !givenMask[$0] && values[$0] != solution[$0] }
-            guard let picked = candidates.randomElement() else { return .hintExhausted }
+            guard let picked = (0..<81).filter(editable).randomElement() else { return .hintExhausted }
             target = picked
         }
 
+        let technique: HintTechnique = values[target] != 0 ? .wrong : (step?.technique ?? .reveal)
         pushUndo(target, digit: solution[target])
         values[target] = solution[target]
         notes[target].removeAll()
         hintsUsed += 1
         moves += 1
         selectedIndex = target
+        lastHint = SingleStep(index: target, digit: solution[target], technique: technique, unit: step?.unit)
         rebuildCells()
         if isWon { pause() }
         return isWon ? .won : .hintRevealed(index: target, digit: solution[target])
@@ -268,6 +288,7 @@ final class GameEngine: ObservableObject {
         values = snapshot.values
         notes = snapshot.notes.map { Set($0) }
         undoStack = snapshot.undoStack ?? []
+        lastHint = nil
         selectedIndex = snapshot.selectedIndex
         notesMode = snapshot.notesMode
         moves = snapshot.moves

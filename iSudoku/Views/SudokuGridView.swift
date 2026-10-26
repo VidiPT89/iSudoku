@@ -4,6 +4,8 @@ struct SudokuGridView: View {
     let cells: [SudokuCell]
     let selectedIndex: Int?
     let shakeTokens: [Int: Int]
+    /// Cells of the row, column or box the latest hint reasoned about.
+    var hintUnit: Set<Int> = []
     let onCellTap: (Int) -> Void
 
     private var selectedValue: Int? { selectedIndex.flatMap { cells[$0].value } }
@@ -29,6 +31,7 @@ struct SudokuGridView: View {
                                 isSelected: isSelected,
                                 isPeer: isPeer,
                                 isSameNumber: isSameNumber,
+                                isHintUnit: hintUnit.contains(index),
                                 shakeToken: shakeTokens[index] ?? 0,
                                 thickRight: col == 2 || col == 5,
                                 thickBottom: row == 2 || row == 5,
@@ -56,6 +59,7 @@ private struct SudokuCellView: View {
     let isSelected: Bool
     let isPeer: Bool
     let isSameNumber: Bool
+    let isHintUnit: Bool
     let shakeToken: Int
     let thickRight: Bool
     let thickBottom: Bool
@@ -95,7 +99,7 @@ private struct SudokuCellView: View {
                 NotesGridView(notes: cell.notes)
             }
         }
-        .overlay(Rectangle().strokeBorder(isSelected ? Theme.accentLight : .clear, lineWidth: 2))
+        .overlay(Rectangle().strokeBorder(isSelected ? Theme.accentLight : (isHintUnit ? Theme.accentDark : .clear), lineWidth: isSelected ? 2 : 1))
         .overlay(alignment: .bottom) {
             if cell.isConflict { Circle().fill(Theme.danger).frame(width: 4, height: 4).padding(.bottom, 3) }
         }

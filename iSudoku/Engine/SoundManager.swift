@@ -1,3 +1,4 @@
+import Foundation
 #if os(macOS)
 import AppKit
 #else
@@ -12,6 +13,10 @@ import AudioToolbox
 /// If real sound design assets are added later (e.g. iSudoku/Sounds/*.caf), swap this for
 /// AVAudioPlayer — the call sites in GameView would not need to change.
 enum SoundManager {
+    /// UserDefaults key of the on/off preference (default on), shared with the toggle's @AppStorage.
+    static let enabledKey = "isudoku-sound"
+    static var isEnabled: Bool { UserDefaults.standard.object(forKey: enabledKey) as? Bool ?? true }
+
     private enum Effect {
         case digitEnter, conflict, hint, win
 
@@ -42,6 +47,7 @@ enum SoundManager {
     static func win() { play(.win) }
 
     private static func play(_ effect: Effect) {
+        guard isEnabled else { return }
         #if os(macOS)
         guard let sound = NSSound(named: effect.name) else { return }
         sound.stop()

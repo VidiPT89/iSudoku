@@ -137,6 +137,37 @@ enum EngineTests {
         check(engine.clearCell() == .ignored, "cannot clear won board")
         check(engine.undo() == .ignored, "cannot undo a recorded win")
         check(engine.hint() == .ignored, "cannot spend hint after win")
+        // Pedagogical hints: deductions only, wrong entries first, explanation is transient.
+        check(!SudokuSolver.solvesWithSingles(inkala), "inkala needs more than singles")
+        for difficulty in [Difficulty.easy, .medium] {
+            for _ in 0..<5 {
+                let puzzle = SudokuGenerator.generate(difficulty)
+                check(SudokuSolver.solvesWithSingles(puzzle.given), "\(difficulty) solvable with singles")
+                if let step = SudokuSolver.findSingle(puzzle.given) {
+                    check(puzzle.solution[step.index] == step.digit, "single matches solution")
+                } else { check(false, "single exists") }
+            }
+        }
+        check(SudokuSolver.indices(of: SudokuUnit(kind: .box, index: 4)) == [30, 31, 32, 39, 40, 41, 48, 49, 50], "box indices")
+        let teacher = GameEngine()
+        teacher.hint()
+        check([HintTechnique.hidden, .naked].contains(teacher.lastHint?.technique), "fresh easy hint is a deduction")
+        if let hint = teacher.lastHint {
+            let text = Localization.shared.hintExplanation(hint)
+            check(text.contains("\(hint.digit)") && !text.contains("{"), "hint explanation filled")
+        }
+        let blankCell = teacher.cells.firstIndex { $0.value == nil }!
+        teacher.selectCell(blankCell)
+        let answer = teacher.makeSnapshot().solution[blankCell]
+        teacher.enterDigit(answer % 9 + 1)
+        check(teacher.lastHint == nil, "a move clears the explanation")
+        teacher.hint()
+        check(teacher.lastHint?.technique == .wrong && teacher.lastHint?.index == blankCell, "wrong entry fixed first")
+        teacher.undo()
+        check(teacher.lastHint == nil, "undo clears the explanation")
+        check(SudokuSolver.findSingle(Array(repeating: 0, count: 81)) == nil, "no single on empty grid")
+        UserDefaults.standard.removeObject(forKey: SoundManager.enabledKey)
+        check(SoundManager.isEnabled, "sound defaults on")
         print("EngineTests.swift: \(checks) checks passed")
     }
 }

@@ -26,6 +26,10 @@ enum SudokuGenerator {
     /// a few times and keeps the sparsest puzzle.
     private static let digAttempts = 12
 
+    /// Puzzles with at least this many clues (Easy, Medium and the matching challenge levels)
+    /// must stay solvable with singles alone: no guessing, and every hint has a deduction.
+    static let singlesOnlyMinClues = 32
+
     static func generate(_ difficulty: Difficulty, targetClues: Int? = nil) -> GeneratedPuzzle {
         let floor = targetClues ?? difficulty.minClues
         var best = digOnce(towards: floor)
@@ -44,13 +48,13 @@ enum SudokuGenerator {
         var puzzle = full
         var clues = 81
         let order = (0..<81).shuffled()
+        let singlesOnly = floor >= singlesOnlyMinClues
 
         for idx in order {
             if clues <= floor { break }
             let backup = puzzle[idx]
             puzzle[idx] = 0
-            let solutions = SudokuSolver.countSolutions(puzzle, cap: 2)
-            if solutions == 1 {
+            if singlesOnly ? SudokuSolver.solvesWithSingles(puzzle) : SudokuSolver.countSolutions(puzzle, cap: 2) == 1 {
                 clues -= 1
             } else {
                 puzzle[idx] = backup

@@ -6,6 +6,7 @@ private enum ModalKind {
 
 struct GameView: View {
     @Environment(\.scenePhase) private var scenePhase
+    @AppStorage(SoundManager.enabledKey) private var soundOn = true
     @EnvironmentObject var loc: Localization
     @ObservedObject var engine: GameEngine
     let onExit: () -> Void
@@ -44,10 +45,17 @@ struct GameView: View {
                             cells: engine.cells,
                             selectedIndex: engine.selectedIndex,
                             shakeTokens: shakeTokens,
+                            hintUnit: Set(engine.lastHint?.unit.map(SudokuSolver.indices(of:)) ?? []),
                             onCellTap: handleTap
                         )
-                        .frame(maxWidth: min(528, max(240, geometry.size.height - 310)))
+                        .frame(maxWidth: min(528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 360))))
                         .padding(.horizontal, 16)
+
+                        if let hint = engine.lastHint {
+                            hintExplanation(loc.hintExplanation(hint))
+                                .padding(.horizontal, 16)
+                                .padding(.top, 10)
+                        }
 
                         Spacer(minLength: 14)
 
@@ -148,8 +156,23 @@ struct GameView: View {
             }
             .frame(maxWidth: .infinity)
 
+            CircleIconButton(systemName: soundOn ? "speaker.wave.2.fill" : "speaker.slash.fill", label: loc.t("sound")) { soundOn.toggle() }
+                .accessibilityValue(loc.t(soundOn ? "on" : "off"))
             CircleIconButton(systemName: "arrow.clockwise", label: loc.t("newGame")) { modal = .confirmRestart }
         }
+    }
+
+    private func hintExplanation(_ text: String) -> some View {
+        Text(text)
+            .font(.system(.footnote))
+            .foregroundColor(Theme.textDim)
+            .fixedSize(horizontal: false, vertical: true)
+            .frame(maxWidth: 528, alignment: .leading)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .background(RoundedRectangle(cornerRadius: 10).fill(Theme.bgPanel))
+            .overlay(alignment: .leading) { Rectangle().fill(Theme.accent).frame(width: 3) }
+            .clipShape(RoundedRectangle(cornerRadius: 10))
     }
 
     /// Difficulty band, plus the mistake count that drives challenge stars.

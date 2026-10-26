@@ -10,11 +10,13 @@
 - ✅ Uniquely-solvable puzzles — clues are removed one at a time, keeping each removal only if the puzzle still solves to exactly one grid
 - ✏️ Pencil-mark notes mode — jot down candidate digits in a cell instead of committing a final value
 - 🚫 Live conflict detection — placing a digit that already exists in the same row, column or 3x3 box highlights every conflicting cell
-- 💡 Limited hints per game (3/4/5 by difficulty) that reveal the correct value for the selected cell — or a random incorrect one if nothing's selected — and ↩️ undo for the last 200 moves including after resuming a saved game
+- 💡 Teaching hints (3/4/5 per game by difficulty): a hint fixes a wrong digit first; otherwise it fills a cell through the simplest deduction available — a digit with only one possible cell in a box, row or column, or a cell with only one possible digit — highlights the unit and explains the reasoning in a sentence. Only when no simple deduction exists does it reveal the answer, and says so
+- 🧠 Easy and Medium puzzles are guaranteed solvable with those deductions alone — no guessing needed
+- ↩️ Undo for the last 200 moves, including after resuming a saved game
 - 🎬 Smooth SwiftUI animations on digit entry and hint reveal
 - 💾 Autosaves mid-game, with a "Continue Game" option from the main menu
 - 🏆 A local best-time / fewest-hints leaderboard per difficulty, stored on-device (no backend), shown after a win
-- 🔊 Sound feedback on digit entry, conflicts and winning (see [Sound](#-sound) below)
+- 🔊 Sound feedback on digit entry, conflicts, hints and winning, with an on/off toggle in the game header (see [Sound](#-sound) below)
 - ⌨️ Hardware keyboard support on Mac and iPad — digits 1-9, Delete to erase, arrow keys to move, N for notes, ⌘Z to undo
 - 📖 An in-app "How to Play" guide covering the rule, given cells, conflicts, notes and the hint/undo tools
 - 🇵🇹 🇬🇧 One-click language toggle between European Portuguese and English, remembered between visits
@@ -42,11 +44,11 @@ iSudoku/
 │   │   └── SudokuCell.swift     # Cell model + difficulty clue/hint tiers
 │   ├── Engine/
 │   │   ├── SudokuGenerator.swift # Randomized full-grid fill + hole digging
-│   │   ├── SudokuSolver.swift     # MRV backtracking solver, capped solution counter, conflict scan
+│   │   ├── SudokuSolver.swift     # Bitmask MRV solution counter, conflict scan, singles (hint techniques)
 │   │   ├── GameEngine.swift        # Board state, dispatch results, undo stack, hints
 │   │   ├── SaveStore.swift          # Mid-game autosave/restore (UserDefaults)
 │   │   ├── Leaderboard.swift         # Local best time/hints per difficulty (UserDefaults)
-│   │   └── SoundManager.swift         # Digit entry / conflict / win sound feedback
+│   │   └── SoundManager.swift         # Digit / conflict / hint / win sounds and the on/off preference
 │   ├── Views/
 │   │   ├── RootView.swift        # Screen router
 │   │   ├── SplashView.swift       # Animated intro with developer credit
@@ -78,7 +80,8 @@ iSudoku/
      - otherwise put the digit back
    stop once the difficulty's target clue count is reached; a dig that
    gets stuck above the target is retried (up to 12 times) and the
-   sparsest puzzle is kept
+   sparsest puzzle is kept. Puzzles with 32+ clues (Easy, Medium and the
+   matching challenge levels) must also stay solvable with singles only
 
 3. The uniqueness check is a bitmask MRV (minimum-remaining-values)
    backtracker: row/column/box digits live in 9-bit masks and the search
@@ -89,9 +92,11 @@ iSudoku/
 
 ### Hints & conflicts
 ```
-Hint: reveals solution[selectedCell] if that cell is empty or wrong;
-      otherwise picks a random cell that still needs fixing. Capped
-      per game by difficulty (Easy 3 / Medium 4 / Hard 5).
+Hint: for the selected cell (if empty or wrong), else for any wrong
+      entry, else for the easiest single on the board (box, then row,
+      column, then naked single) — reasoning only from correct digits.
+      Reveals the value plus a one-sentence explanation. Capped per game
+      by difficulty (Easy 3 / Medium 4 / Hard 5).
 
 Conflicts: recomputed from scratch after every move — for each row,
       column and 3x3 box, any digit appearing more than once flags
@@ -116,7 +121,7 @@ Pick the **iSudoku-iOS** scheme for iPhone/iPad (Simulator or device) or **iSudo
 
 ## 🔊 Sound
 
-Digit entry, conflict, hint and win feedback use built-in system sounds, since the project ships no custom audio assets yet: `AudioServicesPlaySystemSound` (AudioToolbox) on iOS and named `NSSound`s on macOS — see the comment in `SoundManager.swift` for how to swap in real `.caf`/`.wav` files via `AVAudioPlayer` later.
+Digit entry, conflict, hint and win feedback use built-in system sounds, since the project ships no custom audio assets yet: `AudioServicesPlaySystemSound` (AudioToolbox) on iOS and named `NSSound`s on macOS. The speaker button in the game header turns them off (stored in `UserDefaults`) — see the comment in `SoundManager.swift` for how to swap in real `.caf`/`.wav` files via `AVAudioPlayer` later.
 
 ## 📝 Notes
 

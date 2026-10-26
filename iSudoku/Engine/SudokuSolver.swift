@@ -107,4 +107,88 @@ enum SudokuSolver {
 
         return conflicts
     }
+
+    // MARK: - Human techniques (singles)
+
+    /// Cell indices of a row, column or 3x3 box (boxes numbered left-to-right, top-to-bottom).
+    static func indices(of unit: SudokuUnit) -> [Int] {
+        switch unit.kind {
+        case .row: return (0..<9).map { unit.index * 9 + $0 }
+        case .col: return (0..<9).map { $0 * 9 + unit.index }
+        case .box:
+            let r0 = (unit.index / 3) * 3, c0 = (unit.index % 3) * 3
+            return (0..<9).map { (r0 + $0 / 3) * 9 + c0 + $0 % 3 }
+        }
+    }
+
+    private static func candidateMasks(_ grid: [Int]) -> [Int] {
+        var rows = [Int](repeating: 0, count: 9), cols = rows, boxes = rows
+        for idx in 0..<81 where grid[idx] != 0 {
+            let bit = 1 << grid[idx], r = idx / 9, c = idx % 9
+            rows[r] |= bit; cols[c] |= bit; boxes[(r / 3) * 3 + c / 3] |= bit
+        }
+        return (0..<81).map { idx in
+            guard grid[idx] == 0 else { return 0 }
+            let r = idx / 9, c = idx % 9
+            return ~(rows[r] | cols[c] | boxes[(r / 3) * 3 + c / 3]) & 0x3fe
+        }
+    }
+
+    /// Finds one single in a conflict-free grid: a digit with only one possible cell in a box,
+    /// row or column (hidden single — boxes first, the easiest to spot), or a cell with only one
+    /// possible digit (naked single). `onlyIndex` restricts the search to deductions for that cell.
+    static func findSingle(_ grid: [Int], onlyIndex: Int? = nil) -> SingleStep? {
+        let masks = candidateMasks(grid)
+        for kind in [SudokuUnit.Kind.box, .row, .col] {
+            for n in 0..<9 {
+                let unit = SudokuUnit(kind: kind, index: n)
+                let cells = indices(of: unit)
+                if let only = onlyIndex, !cells.contains(only) { continue }
+                for digit in 1...9 {
+                    let homes = cells.filter { masks[$0] & (1 << digit) != 0 }
+                    if homes.count == 1, onlyIndex == nil || homes[0] == onlyIndex {
+                        return SingleStep(index: homes[0], digit: digit, technique: .hidden, unit: unit)
+                    }
+                }
+            }
+        }
+        for idx in 0..<81 where (onlyIndex == nil || idx == onlyIndex) && masks[idx].nonzeroBitCount == 1 {
+            return SingleStep(index: idx, digit: masks[idx].trailingZeroBitCount, technique: .naked, unit: nil)
+        }
+        return nil
+    }
+
+    /// True when repeatedly placing singles fills the whole grid. Every placement is forced,
+    /// so a grid that passes also has exactly one solution.
+    static func solvesWithSingles(_ grid: [Int]) -> Bool {
+        var work = grid
+        while work.contains(0) {
+            let masks = candidateMasks(work)
+            if (0..<81).contains(where: { work[$0] == 0 && masks[$0] == 0 }) { return false }
+            guard let step = findSingle(work) else { return false }
+            work[step.index] = step.digit
+        }
+        return findConflictIndices(work).isEmpty
+    }
+}
+
+struct SudokuUnit: Equatable {
+    enum Kind { case row, col, box }
+    let kind: Kind
+    let index: Int
+}
+
+/// How a hint filled its cell, so the UI can explain the reasoning.
+enum HintTechnique: Equatable {
+    case hidden  // the digit has only one possible cell in `unit`
+    case naked   // the cell has only one possible digit
+    case wrong   // the cell held a wrong digit
+    case reveal  // no single applies; the answer is shown
+}
+
+struct SingleStep: Equatable {
+    let index: Int
+    let digit: Int
+    let technique: HintTechnique
+    let unit: SudokuUnit?
 }
