@@ -40,7 +40,7 @@ struct SudokuGridView: View {
                 }
             }
             .frame(width: side, height: side)
-            .background(Theme.bgPanel)
+            .background(Theme.borderStrong)
             .overlay(RoundedRectangle(cornerRadius: 12).stroke(Theme.borderStrong, lineWidth: 2))
             .cornerRadius(12)
             .clipped()
@@ -87,11 +87,17 @@ private struct SudokuCellView: View {
             Rectangle().fill(bg)
             if let value = cell.value {
                 Text("\(value)")
-                    .font(.system(size: 18, weight: cell.isGiven ? .bold : .semibold))
+                    .font(.system(size: 22, weight: cell.isGiven ? .semibold : .medium, design: .rounded))
+                    .underline(isSameNumber)
+                    .minimumScaleFactor(0.65)
                     .foregroundColor(cell.isConflict ? Theme.conflictText : (cell.isGiven ? Theme.givenDigit : Theme.userDigit))
             } else if !cell.notes.isEmpty {
                 NotesGridView(notes: cell.notes)
             }
+        }
+        .overlay(Rectangle().strokeBorder(isSelected ? Theme.accentLight : .clear, lineWidth: 2))
+        .overlay(alignment: .bottom) {
+            if cell.isConflict { Circle().fill(Theme.danger).frame(width: 4, height: 4).padding(.bottom, 3) }
         }
         .padding(.trailing, thickRight ? 1.5 : 0.25)
         .padding(.bottom, thickBottom ? 1.5 : 0.25)
@@ -132,7 +138,7 @@ private struct NotesGridView: View {
                     ForEach(0..<3) { c in
                         let digit = r * 3 + c + 1
                         Text(notes.contains(digit) ? "\(digit)" : "")
-                            .font(.system(size: 8, weight: .medium))
+                            .font(.system(size: 10, weight: .medium))
                             .foregroundColor(Theme.noteText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }

@@ -169,8 +169,8 @@ struct GameView: View {
 
     private func statGroup<V: View>(_ label: String, @ViewBuilder value: () -> V) -> some View {
         VStack(spacing: 2) {
-            value().font(.system(size: 15, weight: .bold)).foregroundColor(Theme.text).monospacedDigit()
-            Text(label).font(.system(size: 10, weight: .medium)).foregroundColor(Theme.textFaint)
+            value().font(.system(.subheadline, weight: .medium)).foregroundColor(Theme.text).monospacedDigit()
+            Text(label).font(.system(.caption2, weight: .medium)).foregroundColor(Theme.textFaint)
         }
         .frame(maxWidth: .infinity)
     }
@@ -178,7 +178,7 @@ struct GameView: View {
     // MARK: - Action row
 
     private var actionRow: some View {
-        HStack(spacing: 0) {
+        HStack(spacing: 8) {
             actionButton(
                 icon: "pencil",
                 label: loc.t("notes"),
@@ -205,22 +205,18 @@ struct GameView: View {
 
     private func actionButton(icon: String, label: String, active: Bool, disabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            VStack(spacing: 4) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(active ? Theme.accent : Theme.bgPanel2)
-                        .frame(width: 44, height: 44)
-                    Image(systemName: icon)
-                        .font(.system(size: 16))
-                        .foregroundColor(disabled ? Theme.textFaint : (active ? Theme.bg : Theme.text))
-                }
-                Text(label)
-                    .font(.system(size: 11, weight: .medium))
-                    .foregroundColor(disabled ? Theme.textFaint : Theme.textDim)
+            VStack(spacing: 5) {
+                Image(systemName: active ? "pencil.circle.fill" : icon)
+                    .font(.system(size: 20))
+                Text(label).font(.system(.caption, weight: .medium))
             }
-            .frame(maxWidth: .infinity)
+            .foregroundColor(disabled ? Theme.textFaint : (active ? Theme.accentLight : Theme.textDim))
+            .frame(maxWidth: .infinity, minHeight: 58)
+            .background(RoundedRectangle(cornerRadius: 10).fill(active ? Theme.selectedCellBg : Color.clear))
+            .overlay(RoundedRectangle(cornerRadius: 10).strokeBorder(active ? Theme.accent : Color.clear, lineWidth: 1))
         }
         .buttonStyle(.plain)
+        .accessibilityAddTraits(active ? .isSelected : [])
         .disabled(disabled)
     }
 

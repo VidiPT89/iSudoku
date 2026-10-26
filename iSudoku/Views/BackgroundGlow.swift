@@ -6,14 +6,14 @@ struct BackgroundGlow: View {
         ZStack {
             Theme.bg.ignoresSafeArea()
             RadialGradient(
-                colors: [Theme.accent.opacity(0.16), Theme.accent.opacity(0.0)],
+                colors: [Theme.accent.opacity(0.06), Theme.accent.opacity(0.0)],
                 center: .init(x: 0.5, y: 0.15),
                 startRadius: 10,
                 endRadius: 480
             )
             .ignoresSafeArea()
             RadialGradient(
-                colors: [Theme.accentDark.opacity(0.12), Color.clear],
+                colors: [Theme.accentDark.opacity(0.025), Color.clear],
                 center: .init(x: 0.85, y: 0.9),
                 startRadius: 10,
                 endRadius: 420
@@ -41,16 +41,14 @@ struct BrandLogo: View {
 struct FooterCredits: View {
     var body: some View {
         let loc = Localization.shared
-        HStack(spacing: 6) {
+        VStack(spacing: 6) {
             Text(loc.t("developedBy"))
                 .foregroundColor(Theme.textDim)
             Text("David Arsénio Martins")
                 .fontWeight(.semibold)
                 .foregroundColor(Theme.text)
-            Text("·").foregroundColor(Theme.textFaint)
             Link("ividi.dev", destination: URL(string: "https://ividi.dev/")!)
                 .foregroundColor(Theme.accent)
-            Text("·").foregroundColor(Theme.textFaint)
             Link("GitHub", destination: URL(string: "https://github.com/VidiPT89/")!)
                 .foregroundColor(Theme.accent)
         }
@@ -62,14 +60,14 @@ struct FooterCredits: View {
 struct PrimaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(.body, weight: .semibold))
             .foregroundColor(Theme.bg)
             .frame(maxWidth: 340)
             .padding(.vertical, 14)
             .background(
                 RoundedRectangle(cornerRadius: Theme.radius)
-                    .fill(LinearGradient(colors: [Theme.accentLight, Theme.accent], startPoint: .top, endPoint: .bottom))
-                    .shadow(color: Theme.accentGlow, radius: configuration.isPressed ? 4 : 14, y: 4)
+                    .fill(Theme.accent)
+                    .shadow(color: Theme.accentGlow, radius: configuration.isPressed ? 2 : 6, y: 4)
             )
             .scaleEffect(configuration.isPressed ? 0.97 : 1)
             .animation(.easeOut(duration: 0.15), value: configuration.isPressed)
@@ -79,7 +77,7 @@ struct PrimaryButtonStyle: ButtonStyle {
 struct SecondaryButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 16, weight: .semibold))
+            .font(.system(.body, weight: .semibold))
             .foregroundColor(Theme.text)
             .frame(maxWidth: 340)
             .padding(.vertical, 14)
@@ -96,7 +94,7 @@ struct SecondaryButtonStyle: ButtonStyle {
 struct GhostButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(size: 15, weight: .medium))
+            .font(.system(.body, weight: .medium))
             .foregroundColor(Theme.textDim)
             .frame(maxWidth: 340)
             .padding(.vertical, 12)

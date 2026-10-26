@@ -38,7 +38,7 @@ struct DifficultyPicker: View {
     var body: some View {
         VStack(spacing: 6) {
             Text(loc.t("difficultyLabel"))
-                .font(.system(size: 10, weight: .semibold))
+                .font(.system(.caption, weight: .medium))
                 .tracking(1.5)
                 .foregroundColor(Theme.textFaint)
                 .textCase(.uppercase)
@@ -56,10 +56,10 @@ struct DifficultyPicker: View {
     private func option(_ value: Difficulty, label: String) -> some View {
         Button(action: { selected = value }) {
             Text(label)
-                .font(.system(size: 13, weight: .bold))
+                .font(.system(.subheadline, weight: .medium))
                 .foregroundColor(selected == value ? Theme.bg : Theme.textFaint)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 8)
+                .frame(minHeight: 44)
                 .background(Capsule().fill(selected == value ? Theme.accent : Color.clear))
         }
         .buttonStyle(.plain)
@@ -79,16 +79,12 @@ struct MainMenuView: View {
         ZStack {
             BackgroundGlow()
 
-            VStack {
-                HStack {
-                    Spacer()
-                    LangToggle().padding(.top, 18).padding(.trailing, 18)
-                }
-                Spacer()
-            }
 
-            VStack(spacing: 16) {
-                Spacer()
+
+            GeometryReader { geometry in
+              ScrollView {
+               VStack(spacing: 16) {
+                Spacer(minLength: 28)
 
                 Text(loc.t("menuTag"))
                     .font(.system(size: 12, weight: .bold))
@@ -98,7 +94,7 @@ struct MainMenuView: View {
                 BrandLogo(size: 44)
 
                 Text(loc.t("menuSubtitle"))
-                    .font(.system(size: 15))
+                    .font(.system(.body))
                     .foregroundColor(Theme.textDim)
                     .multilineTextAlignment(.center)
                     .padding(.horizontal, 32)
@@ -120,10 +116,21 @@ struct MainMenuView: View {
                 }
                 .padding(.top, 10)
 
-                Spacer()
+                Spacer(minLength: 28)
                 FooterCredits()
+               }
+               .padding(.horizontal, 24)
+               .padding(.top, 64)
+               .frame(maxWidth: .infinity, minHeight: geometry.size.height)
+              }
             }
-            .padding(.top, 24)
+            VStack {
+                HStack {
+                    Spacer()
+                    LangToggle().padding(.top, 18).padding(.trailing, 18)
+                }
+                Spacer()
+            }
         }
     }
 }

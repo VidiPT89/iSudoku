@@ -17,8 +17,9 @@ struct NumberPadView: View {
                     .font(.system(size: 16))
                     .foregroundColor(Theme.textDim)
                     .frame(maxWidth: .infinity)
-                    .frame(height: 44)
+                    .frame(minHeight: 48)
                     .background(RoundedRectangle(cornerRadius: 8).fill(Theme.bgPanel2))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(notesMode ? Theme.accent.opacity(0.6) : Theme.border, style: StrokeStyle(lineWidth: 1, dash: notesMode ? [3, 3] : [])))
             }
             .buttonStyle(.plain)
             .accessibilityLabel(loc.t("erase"))
@@ -29,11 +30,12 @@ struct NumberPadView: View {
         let disabled = !notesMode && remainingCounts[digit - 1] <= 0
         return Button(action: { onDigit(digit) }) {
             Text("\(digit)")
-                .font(.system(size: 17, weight: .semibold))
-                .foregroundColor(disabled ? Theme.textFaint : Theme.text)
+                .font(.system(.title3, design: .rounded, weight: .medium))
+                .foregroundColor(disabled ? Theme.textFaint : (notesMode ? Theme.accentLight : Theme.text))
                 .frame(maxWidth: .infinity)
-                .frame(height: 44)
+                .frame(minHeight: 48)
                 .background(RoundedRectangle(cornerRadius: 8).fill(Theme.bgPanel2))
+                .overlay(RoundedRectangle(cornerRadius: 8).strokeBorder(notesMode ? Theme.accent.opacity(0.6) : Theme.border, style: StrokeStyle(lineWidth: 1, dash: notesMode ? [3, 3] : [])))
         }
         .buttonStyle(.plain)
         .disabled(disabled)
