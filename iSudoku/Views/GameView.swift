@@ -45,7 +45,7 @@ struct GameView: View {
                             cells: engine.cells,
                             selectedIndex: engine.selectedIndex,
                             shakeTokens: shakeTokens,
-                            hintUnit: Set(engine.lastHint?.unit.map(SudokuSolver.indices(of:)) ?? []),
+                            hintUnit: engine.lastHint?.highlight ?? [],
                             onCellTap: handleTap
                         )
                         .frame(maxWidth: min(528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 360))))
@@ -207,6 +207,7 @@ struct GameView: View {
         HStack(spacing: 8) {
             actionButton(
                 icon: "pencil",
+                activeIcon: "pencil.circle.fill",
                 label: loc.t("notes"),
                 active: engine.notesMode,
                 disabled: false,
@@ -223,18 +224,19 @@ struct GameView: View {
             .keyboardShortcut("z", modifiers: .command)
             actionButton(
                 icon: "lightbulb",
-                label: "\(loc.t("hint")) (\(engine.hintsRemaining))",
-                active: false,
-                disabled: engine.hintsRemaining <= 0,
+                activeIcon: "lightbulb.fill",
+                label: engine.lastHint?.revealed == false ? loc.t("reveal") : "\(loc.t("hint")) (\(engine.hintsRemaining))",
+                active: engine.lastHint?.revealed == false,
+                disabled: false,
                 action: performHint
             )
         }
     }
 
-    private func actionButton(icon: String, label: String, active: Bool, disabled: Bool, action: @escaping () -> Void) -> some View {
+    private func actionButton(icon: String, activeIcon: String? = nil, label: String, active: Bool, disabled: Bool, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             VStack(spacing: 5) {
-                Image(systemName: active ? "pencil.circle.fill" : icon)
+                Image(systemName: active ? activeIcon ?? icon : icon)
                     .font(.system(size: 20))
                 Text(label).font(.system(.caption, weight: .medium))
             }
@@ -273,6 +275,8 @@ struct GameView: View {
         case .hintRevealed:
             SoundManager.hint()
             persist()
+        case .hintClue:
+            break
         case .hintExhausted:
             showToast(loc.t("noHintsLeft"))
         case .won:
@@ -328,8 +332,9 @@ struct GameView: View {
         handleResult(engine.undo())
     }
 
+    /// First press shows a free clue; pressing again while it is showing reveals the cell.
     private func performHint() {
-        handleResult(engine.hint())
+        handleResult(engine.lastHint?.revealed == false ? engine.hint() : engine.clue())
     }
 
     private func performRestart() {

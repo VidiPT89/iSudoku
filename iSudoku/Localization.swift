@@ -30,24 +30,35 @@ final class Localization: ObservableObject {
         strings[lang]?[key] ?? key
     }
 
-    /// Sentence explaining how a hint filled its cell (row/column/digit filled into the template).
-    func hintExplanation(_ hint: SingleStep) -> String {
+    /// Hint panel text: the elimination steps, then either the clue (where to look) or, once
+    /// revealed, the deduction that fills the cell. One sentence per line.
+    func hintExplanation(_ hint: HintPlan) -> String {
+        func fill(_ key: String, _ values: [String: String]) -> String {
+            values.reduce(t(key)) { $0.replacingOccurrences(of: "{\($1.key)}", with: $1.value) }
+        }
+        func line(_ unit: SudokuUnit) -> String { fill(unit.kind == .row ? "lineRow" : "lineCol", ["n": "\(unit.index + 1)"]) }
+        func cellRef(_ i: Int) -> String { fill("cellRef", ["r": "\(i / 9 + 1)", "c": "\(i % 9 + 1)"]) }
+        var lines = hint.eliminations.map { e -> String in
+            switch e.kind {
+            case .pointing: return fill("elimPointing", ["b": "\(e.source.index + 1)", "d": "\(e.digits[0])", "line": line(e.target)])
+            case .claiming: return fill("elimClaiming", ["b": "\(e.target.index + 1)", "d": "\(e.digits[0])", "line": line(e.source)])
+            case .pair:
+                let ofKey = e.source.kind == .row ? "ofRow" : e.source.kind == .col ? "ofCol" : "ofBox"
+                return fill("elimPair", ["cells": e.cells.map(cellRef).joined(separator: t("and")),
+                                         "a": "\(e.digits[0])", "e": "\(e.digits[1])", "of": fill(ofKey, ["n": "\(e.source.index + 1)"])])
+            }
+        }
+        let prefix = hint.revealed ? "hint" : "clue"
         let key: String
         switch hint.technique {
-        case .hidden:
-            switch hint.unit?.kind {
-            case .box?: key = "hintHiddenBox"
-            case .row?: key = "hintHiddenRow"
-            default: key = "hintHiddenCol"
-            }
-        case .naked: key = "hintNaked"
-        case .wrong: key = "hintWrong"
-        case .reveal: key = "hintReveal"
+        case .hidden: key = prefix + (hint.unit?.kind == .box ? "HiddenBox" : hint.unit?.kind == .row ? "HiddenRow" : "HiddenCol")
+        case .naked: key = prefix + "Naked"
+        case .wrong: key = prefix + "Wrong"
+        case .reveal: key = prefix + "Reveal"
         }
-        return t(key)
-            .replacingOccurrences(of: "{r}", with: "\(hint.index / 9 + 1)")
-            .replacingOccurrences(of: "{c}", with: "\(hint.index % 9 + 1)")
-            .replacingOccurrences(of: "{d}", with: "\(hint.digit)")
+        lines.append(fill(key, ["r": "\(hint.index / 9 + 1)", "c": "\(hint.index % 9 + 1)", "d": "\(hint.digit)"]))
+        if !hint.revealed { lines.append(t("clueNext")) }
+        return lines.joined(separator: "\n")
     }
 
     private let strings: [Lang: [String: String]] = [
@@ -95,6 +106,20 @@ final class Localization: ObservableObject {
             "noHintsLeft": "Sem mais dicas disponíveis.",
             "nothingToUndo": "Nada para anular.",
             "sound": "Som",
+            "reveal": "Revelar",
+            "lineRow": "linha {n}", "lineCol": "coluna {n}",
+            "ofRow": "da linha {n}", "ofCol": "da coluna {n}", "ofBox": "do bloco {n}",
+            "cellRef": "(linha {r}, coluna {c})", "and": " e ",
+            "elimPointing": "No bloco {b}, o {d} só pode ficar na {line}, por isso sai do resto da {line}.",
+            "elimClaiming": "Na {line}, o {d} só pode ficar no bloco {b}, por isso sai das outras casas desse bloco.",
+            "elimPair": "As casas {cells} só aceitam o {a} e o {e}, por isso esses números saem das outras casas {of}.",
+            "clueWrong": "Há um número errado na linha {r}.",
+            "clueHiddenBox": "Olha para o bloco destacado: o {d} só tem uma casa possível.",
+            "clueHiddenRow": "Olha para a linha {r}: o {d} só tem uma casa possível.",
+            "clueHiddenCol": "Olha para a coluna {c}: o {d} só tem uma casa possível.",
+            "clueNaked": "Na linha {r} há uma casa onde só cabe um número.",
+            "clueReveal": "Não há dedução simples neste momento.",
+            "clueNext": "Carrega em Revelar para preencher a casa (gasta uma dica).",
             "on": "ligado",
             "off": "desligado",
             "hintHiddenBox": "No bloco destacado, o {d} só cabe na linha {r}, coluna {c}.",
@@ -130,7 +155,7 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notas",
             "htpNotesBody": "Marca candidatos nas casas vazias. Ao colocar um número, essa nota é removida da mesma linha, coluna e bloco. Desfazer também recupera essas notas.",
             "htpToolsTitle": "Ferramentas",
-            "htpHintTool": "Corrige primeiro um número errado; senão preenche uma casa pela dedução mais simples e explica porquê. Há 3, 4 ou 5 dicas por partida. Uma dica usada continua a contar mesmo que desfaças a jogada.",
+            "htpHintTool": "O primeiro toque dá uma pista grátis: onde olhar, sem preencher. O segundo (Revelar) preenche a casa e explica a dedução: um número errado primeiro; senão sozinhos, candidatos apontados, reclamados ou pares. Há 3, 4 ou 5 revelações por partida e uma usada continua a contar mesmo que desfaças a jogada.",
             "htpUndoTool": "Recupera o valor e as notas anteriores. Os últimos 200 movimentos ficam guardados ao sair e retomar. Erros e dicas usados continuam a contar.",
             "htpCloseButton": "Entendido",
         ],
@@ -178,6 +203,20 @@ final class Localization: ObservableObject {
             "noHintsLeft": "No more hints available.",
             "nothingToUndo": "Nothing to undo.",
             "sound": "Sound",
+            "reveal": "Reveal",
+            "lineRow": "row {n}", "lineCol": "column {n}",
+            "ofRow": "row {n}", "ofCol": "column {n}", "ofBox": "box {n}",
+            "cellRef": "(row {r}, column {c})", "and": " and ",
+            "elimPointing": "In box {b}, {d} can only go in {line}, so it leaves the rest of {line}.",
+            "elimClaiming": "In {line}, {d} can only go in box {b}, so it leaves the other cells of that box.",
+            "elimPair": "Cells {cells} only take {a} and {e}, so those digits leave the other cells of {of}.",
+            "clueWrong": "There is a wrong digit in row {r}.",
+            "clueHiddenBox": "Look at the highlighted box: {d} has only one possible cell.",
+            "clueHiddenRow": "Look at row {r}: {d} has only one possible cell.",
+            "clueHiddenCol": "Look at column {c}: {d} has only one possible cell.",
+            "clueNaked": "Row {r} has a cell where only one digit fits.",
+            "clueReveal": "No simple deduction applies right now.",
+            "clueNext": "Press Reveal to fill the cell in (uses a hint).",
             "on": "on",
             "off": "off",
             "hintHiddenBox": "In the highlighted box, {d} only fits in row {r}, column {c}.",
@@ -213,7 +252,7 @@ final class Localization: ObservableObject {
             "htpNotesTitle": "Notes",
             "htpNotesBody": "Mark candidates in empty cells. Placing a digit removes that note from its row, column and box. Undo also restores those notes.",
             "htpToolsTitle": "Tools",
-            "htpHintTool": "Fixes a wrong digit first; otherwise fills a cell through the simplest deduction and explains why. Each game has 3, 4 or 5 hints. A used hint still counts even if you undo the move.",
+            "htpHintTool": "The first tap gives a free clue: where to look, without filling anything. The second (Reveal) fills the cell and explains the deduction: a wrong digit first; otherwise singles, pointing or claiming candidates, or pairs. Each game has 3, 4 or 5 reveals and a used one still counts even if you undo the move.",
             "htpUndoTool": "Restores the previous value and notes. The last 200 moves are saved when you leave and resume. Mistakes and used hints still count.",
             "htpCloseButton": "Got It",
         ],

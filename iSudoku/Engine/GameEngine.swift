@@ -7,6 +7,7 @@ enum SudokuResult: Equatable {
     case cellCleared(Int)
     case noteToggled(index: Int, digit: Int)
     case undone
+    case hintClue
     case hintRevealed(index: Int, digit: Int)
     case hintExhausted
     case won
@@ -39,7 +40,7 @@ final class GameEngine: ObservableObject {
     @Published private(set) var wrongMoves = 0
     @Published private(set) var challengeLevel: Int? = nil
     /// Explanation of the latest hint, until the board changes again.
-    @Published private(set) var lastHint: SingleStep?
+    @Published private(set) var lastHint: HintPlan?
     private var elapsedBeforeRun: Double = 0
     private var runningSince: TimeInterval? = ProcessInfo.processInfo.systemUptime
 
@@ -196,42 +197,69 @@ final class GameEngine: ObservableObject {
         notesMode.toggle()
     }
 
-    /// Fixes a wrong entry first; otherwise fills a cell through the simplest deduction
-    /// available (a single), explained in `lastHint`, and only reveals blindly when none applies.
+    /// Plans the next hint without changing the board: a wrong entry first (the selected cell,
+    /// else any); otherwise the simplest deduction — a single, possibly exposed by a short chain
+    /// of eliminations — reasoning only from correct digits; a blind reveal only when nothing applies.
+    func planHint() -> HintPlan? {
+        let editable = { (i: Int) in !self.givenMask[i] && self.values[i] != self.solution[i] }
+        let board = (0..<81).map { values[$0] == solution[$0] ? values[$0] : 0 }
+        let index: Int
+        var technique = HintTechnique.reveal
+        var unit: SudokuUnit?
+        var eliminations: [Elimination] = []
+        func use(_ deduction: (single: SingleStep, eliminations: [Elimination])) {
+            technique = deduction.single.technique
+            unit = deduction.single.unit
+            eliminations = deduction.eliminations
+        }
+        if let selected = selectedIndex, (0..<81).contains(selected), editable(selected) {
+            index = selected
+            if values[selected] != 0 { technique = .wrong }
+            else if let deduction = Techniques.planDeduction(board, onlyIndex: selected) { use(deduction) }
+        } else if let wrong = (0..<81).filter({ editable($0) && values[$0] != 0 }).randomElement() {
+            index = wrong
+            technique = .wrong
+        } else if let deduction = Techniques.planDeduction(board) {
+            index = deduction.single.index
+            use(deduction)
+        } else {
+            guard let picked = (0..<81).filter(editable).randomElement() else { return nil }
+            index = picked
+        }
+        var highlight = Set(unit?.cells ?? [])
+        if technique == .wrong || technique == .naked { highlight.formUnion(SudokuUnit(kind: .row, index: index / 9).cells) }
+        for elimination in eliminations { highlight.formUnion(elimination.cells) }
+        return HintPlan(index: index, digit: solution[index], technique: technique, unit: unit, eliminations: eliminations, highlight: highlight)
+    }
+
+    /// First half of a hint: explains where to look without filling anything. Free.
+    @discardableResult
+    func clue() -> SudokuResult {
+        guard !isWon else { return .ignored }
+        guard let plan = planHint() else { return .hintExhausted }
+        lastHint = plan
+        return .hintClue
+    }
+
+    /// Fills the planned cell (the pending clue's, if one is showing) and costs a hint.
     @discardableResult
     func hint() -> SudokuResult {
         guard !isWon else { return .ignored }
         guard hintsUsed < maxHints else { return .hintExhausted }
+        guard var plan = lastHint.flatMap({ $0.revealed ? nil : $0 }) ?? planHint() else { return .hintExhausted }
 
-        let editable = { (i: Int) in !self.givenMask[i] && self.values[i] != self.solution[i] }
-        // Wrong entries are left out so every deduction follows from correct digits only.
-        let board = (0..<81).map { values[$0] == solution[$0] ? values[$0] : 0 }
-        let target: Int
-        var step: SingleStep?
-        if let selected = selectedIndex, (0..<81).contains(selected), editable(selected) {
-            target = selected
-            if values[selected] == 0 { step = SudokuSolver.findSingle(board, onlyIndex: selected) }
-        } else if let wrong = (0..<81).filter({ editable($0) && values[$0] != 0 }).randomElement() {
-            target = wrong
-        } else if let single = SudokuSolver.findSingle(board) {
-            target = single.index
-            step = single
-        } else {
-            guard let picked = (0..<81).filter(editable).randomElement() else { return .hintExhausted }
-            target = picked
-        }
-
-        let technique: HintTechnique = values[target] != 0 ? .wrong : (step?.technique ?? .reveal)
-        pushUndo(target, digit: solution[target])
-        values[target] = solution[target]
+        let target = plan.index
+        pushUndo(target, digit: plan.digit)
+        values[target] = plan.digit
         notes[target].removeAll()
         hintsUsed += 1
         moves += 1
         selectedIndex = target
-        lastHint = SingleStep(index: target, digit: solution[target], technique: technique, unit: step?.unit)
+        plan.revealed = true
+        lastHint = plan
         rebuildCells()
         if isWon { pause() }
-        return isWon ? .won : .hintRevealed(index: target, digit: solution[target])
+        return isWon ? .won : .hintRevealed(index: target, digit: plan.digit)
     }
 
     static func arePeers(_ a: Int, _ b: Int) -> Bool {

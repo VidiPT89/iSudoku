@@ -138,19 +138,23 @@ enum EngineTests {
         check(engine.undo() == .ignored, "cannot undo a recorded win")
         check(engine.hint() == .ignored, "cannot spend hint after win")
         // Pedagogical hints: deductions only, wrong entries first, explanation is transient.
-        check(!SudokuSolver.solvesWithSingles(inkala), "inkala needs more than singles")
+        check(!Techniques.solvesLogically(inkala), "inkala needs more than singles")
         for difficulty in [Difficulty.easy, .medium] {
             for _ in 0..<5 {
                 let puzzle = SudokuGenerator.generate(difficulty)
-                check(SudokuSolver.solvesWithSingles(puzzle.given), "\(difficulty) solvable with singles")
-                if let step = SudokuSolver.findSingle(puzzle.given) {
+                check(Techniques.solvesLogically(puzzle.given), "\(difficulty) solvable with singles")
+                if let step = Techniques.findSingle(puzzle.given) {
                     check(puzzle.solution[step.index] == step.digit, "single matches solution")
                 } else { check(false, "single exists") }
             }
         }
-        check(SudokuSolver.indices(of: SudokuUnit(kind: .box, index: 4)) == [30, 31, 32, 39, 40, 41, 48, 49, 50], "box indices")
+        check(SudokuUnit(kind: .box, index: 4).cells == [30, 31, 32, 39, 40, 41, 48, 49, 50], "box indices")
         let teacher = GameEngine()
+        teacher.clue()
+        check(teacher.hintsUsed == 0 && teacher.lastHint?.revealed == false, "clue is free and fills nothing")
+        let cluedIndex = teacher.lastHint?.index
         teacher.hint()
+        check(teacher.lastHint?.revealed == true && teacher.lastHint?.index == cluedIndex, "reveal fills the clued cell")
         check([HintTechnique.hidden, .naked].contains(teacher.lastHint?.technique), "fresh easy hint is a deduction")
         if let hint = teacher.lastHint {
             let text = Localization.shared.hintExplanation(hint)
@@ -165,7 +169,35 @@ enum EngineTests {
         check(teacher.lastHint?.technique == .wrong && teacher.lastHint?.index == blankCell, "wrong entry fixed first")
         teacher.undo()
         check(teacher.lastHint == nil, "undo clears the explanation")
-        check(SudokuSolver.findSingle(Array(repeating: 0, count: 81)) == nil, "no single on empty grid")
+        check(Techniques.findSingle(Array(repeating: 0, count: 81)) == nil, "no single on empty grid")
+        // Elimination techniques on hand-made candidate grids.
+        var pointing = Array(repeating: 0, count: 81)
+        pointing[0] = 1 << 5; pointing[1] = 1 << 5; pointing[5] = (1 << 5) | (1 << 3)
+        let pointed = Techniques.findElimination(pointing)
+        check(pointed?.kind == .pointing && pointed?.removals == [Elimination.Removal(index: 5, bits: 32)], "pointing")
+        var pairGrid = Array(repeating: 0, count: 81)
+        pairGrid[0] = (1 << 2) | (1 << 7); pairGrid[1] = pairGrid[0]; pairGrid[2] = (1 << 2) | (1 << 4)
+        let paired = Techniques.findElimination(pairGrid)
+        check(paired?.kind == .pair && paired?.digits == [2, 7] && paired?.removals == [Elimination.Removal(index: 2, bits: 4)], "naked pair")
+        check(Techniques.findElimination(Array(repeating: 0, count: 81)) == nil, "no elimination on empty candidates")
+        let pointingHint = HintPlan(index: 0, digit: 9, technique: .naked, unit: nil, eliminations: [pointed!], highlight: [])
+        Localization.shared.lang = .en
+        check(Localization.shared.hintExplanation(pointingHint) == "In box 1, 5 can only go in row 1, so it leaves the rest of row 1.\nRow 1 has a cell where only one digit fits.\nPress Reveal to fill the cell in (uses a hint).", "clue text with elimination")
+        for _ in 0..<5 {
+            let hard = SudokuGenerator.generate(.hard)
+            check(Techniques.solvesLogically(hard.given, withEliminations: true) && !Techniques.solvesLogically(hard.given), "hard needs eliminations, never guessing")
+        }
+        for _ in 0..<3 {
+            let hard = SudokuGenerator.generate(.hard)
+            var work = hard.given, sound = true, longest = 0
+            while let plan = Techniques.planDeduction(work) {
+                longest = max(longest, plan.eliminations.count)
+                if hard.solution[plan.single.index] != plan.single.digit { sound = false }
+                work[plan.single.index] = plan.single.digit
+                if !work.contains(0) { break }
+            }
+            check(sound && !work.contains(0) && longest <= 30, "hint deductions are sound and finish hard puzzles")
+        }
         UserDefaults.standard.removeObject(forKey: SoundManager.enabledKey)
         check(SoundManager.isEnabled, "sound defaults on")
         print("EngineTests.swift: \(checks) checks passed")

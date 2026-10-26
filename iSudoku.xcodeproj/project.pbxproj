@@ -17,8 +17,10 @@
 		2FE7748D3E8AFC71FA3C76A2 /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFBDE2BF8CFAAE5F3C45A5C /* ChallengesScreen.swift */; };
 		36F6911934EA9C1383A31F69 /* MainMenuView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BD46A49696AFAA08E9C56453 /* MainMenuView.swift */; };
 		38ACFE0178A786AA1A5BB9B4 /* iSudokuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E1AAE334BFDEFA9F5732AD /* iSudokuApp.swift */; };
+		41BB8EE283799245096CA292 /* Techniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4170EFED883F926D4C2E0BD /* Techniques.swift */; };
 		4543421C783F6B451A586504 /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E8FAC7740288250F98313A /* HowToPlayView.swift */; };
 		4669C1C4A4ABEEDACF92F866 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA245ACF50F838181EDC2CE1 /* Theme.swift */; };
+		58B2A401328033012E54FECE /* Techniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4170EFED883F926D4C2E0BD /* Techniques.swift */; };
 		5A673693A8A374F923EC9FDD /* NumberPadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC9E871C25817BC05883A50 /* NumberPadView.swift */; };
 		5BC670AD6E07B3DF2495A4DB /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F947EC5C19777478034EE8BC /* SoundManager.swift */; };
 		66872124209380454D22C0CC /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C562933BB2C04E0FEFB0E181 /* GameEngine.swift */; };
@@ -75,6 +77,7 @@
 		C562933BB2C04E0FEFB0E181 /* GameEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameEngine.swift; sourceTree = "<group>"; };
 		C5824F4D6B6CF16BA94397BE /* SplashView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SplashView.swift; sourceTree = "<group>"; };
 		E282A9A69843204872E9AA5F /* BackgroundGlow.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundGlow.swift; sourceTree = "<group>"; };
+		F4170EFED883F926D4C2E0BD /* Techniques.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Techniques.swift; sourceTree = "<group>"; };
 		F67FC43A563377BB4D5C6858 /* SaveStore.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SaveStore.swift; sourceTree = "<group>"; };
 		F947EC5C19777478034EE8BC /* SoundManager.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SoundManager.swift; sourceTree = "<group>"; };
 		FA245ACF50F838181EDC2CE1 /* Theme.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Theme.swift; sourceTree = "<group>"; };
@@ -133,6 +136,7 @@
 				F947EC5C19777478034EE8BC /* SoundManager.swift */,
 				BDE9E7D561FF305E39838B16 /* SudokuGenerator.swift */,
 				343F431A2F71B9D32E80B05D /* SudokuSolver.swift */,
+				F4170EFED883F926D4C2E0BD /* Techniques.swift */,
 			);
 			path = Engine;
 			sourceTree = "<group>";
@@ -272,6 +276,7 @@
 				C18A41D516D60E64DBCDF5D4 /* SudokuGenerator.swift in Sources */,
 				D7F647630A84BD68567F4428 /* SudokuGridView.swift in Sources */,
 				D5A63C9F4060A01E9A4D15FD /* SudokuSolver.swift in Sources */,
+				41BB8EE283799245096CA292 /* Techniques.swift in Sources */,
 				4669C1C4A4ABEEDACF92F866 /* Theme.swift in Sources */,
 				074B2DBCABE72F2EBE3CA2D4 /* iSudokuApp.swift in Sources */,
 			);
@@ -300,6 +305,7 @@
 				9F844482FE30D95CA407528D /* SudokuGenerator.swift in Sources */,
 				824638975F2459813C93B01D /* SudokuGridView.swift in Sources */,
 				DD632D9AB0698930CC41464A /* SudokuSolver.swift in Sources */,
+				58B2A401328033012E54FECE /* Techniques.swift in Sources */,
 				ABED97413128D9478E9286ED /* Theme.swift in Sources */,
 				38ACFE0178A786AA1A5BB9B4 /* iSudokuApp.swift in Sources */,
 			);
