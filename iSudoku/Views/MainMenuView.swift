@@ -73,6 +73,7 @@ struct MainMenuView: View {
     let onPlay: () -> Void
     let onContinue: () -> Void
     let onChallenges: () -> Void
+    let onAcademy: () -> Void
     let onHowToPlay: () -> Void
 
     var body: some View {
@@ -109,6 +110,8 @@ struct MainMenuView: View {
                     }
                     Button(loc.t("play"), action: onPlay)
                         .buttonStyle(PrimaryButtonStyle())
+                    Button(loc.t("academy"), action: onAcademy)
+                        .buttonStyle(SecondaryButtonStyle())
                     Button(loc.t("challenges"), action: onChallenges)
                         .buttonStyle(SecondaryButtonStyle())
                     Button(loc.t("howToPlay"), action: onHowToPlay)

@@ -14,6 +14,8 @@ struct GameView: View {
     var onNextChallenge: () -> Void = {}
     var onChallengeLevels: () -> Void = {}
     var onChallengeWin: (_ level: Int, _ stars: Int, _ elapsedSeconds: Double) -> Void = { _, _, _ in }
+    /// Opens the Academy lesson for the technique the latest hint used.
+    var onPractise: (Lesson) -> Void = { _ in }
 
     @State private var modal: ModalKind = .none
     @State private var toastMessage: String?
@@ -48,13 +50,22 @@ struct GameView: View {
                             hintUnit: engine.lastHint?.highlight ?? [],
                             onCellTap: handleTap
                         )
-                        .frame(maxWidth: min(wide(geometry) ? 820 : 528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 360))))
+                        .frame(maxWidth: min(wide(geometry) ? 820 : 528, max(240, geometry.size.height - (engine.lastHint == nil ? 310 : 400))))
                         .padding(.horizontal, 16)
 
                         if let hint = engine.lastHint {
                             hintExplanation(loc.hintExplanation(hint))
                                 .padding(.horizontal, 16)
                                 .padding(.top, 10)
+                            if let lesson = Lesson.practising(hint) {
+                                Button(action: { persist(); onPractise(lesson) }) {
+                                    Label("\(loc.t("practiseTechnique")): \(loc.t("lesson_\(lesson.rawValue)_Name"))", systemImage: "graduationcap")
+                                        .font(.system(.footnote, weight: .semibold))
+                                        .foregroundColor(Theme.accent)
+                                        .frame(minHeight: 44)
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
 
                         Spacer(minLength: 14)

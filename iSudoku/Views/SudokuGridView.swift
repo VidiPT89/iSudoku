@@ -86,6 +86,9 @@ private struct SudokuCellView: View {
             let digits = cell.notes.sorted().map { String($0) }.joined(separator: ", ")
             parts.append(loc.t("notes") + ": " + digits)
         }
+        if !cell.struckNotes.isEmpty {
+            parts.append(loc.t("removedNotes") + ": " + cell.struckNotes.sorted().map { String($0) }.joined(separator: ", "))
+        }
         return parts.joined(separator: ", ")
     }
 
@@ -98,8 +101,8 @@ private struct SudokuCellView: View {
                     .underline(isSameNumber)
                     .minimumScaleFactor(0.65)
                     .foregroundColor(cell.isConflict ? Theme.conflictText : (cell.isGiven ? Theme.givenDigit : Theme.userDigit))
-            } else if !cell.notes.isEmpty {
-                NotesGridView(notes: cell.notes, fontSize: cellSize * 0.24)
+            } else if !cell.notes.isEmpty || !cell.struckNotes.isEmpty {
+                NotesGridView(notes: cell.notes, struck: cell.struckNotes, fontSize: cellSize * 0.24)
             }
         }
         .overlay(Rectangle().strokeBorder(isSelected ? Theme.accentLight : (isHintUnit ? Theme.accentDark : .clear), lineWidth: isSelected ? 2 : 1))
@@ -137,6 +140,7 @@ private struct SudokuCellView: View {
 
 private struct NotesGridView: View {
     let notes: Set<Int>
+    var struck: Set<Int> = []
     let fontSize: CGFloat
 
     var body: some View {
@@ -145,9 +149,10 @@ private struct NotesGridView: View {
                 HStack(spacing: 0) {
                     ForEach(0..<3) { c in
                         let digit = r * 3 + c + 1
-                        Text(notes.contains(digit) ? "\(digit)" : "")
-                            .font(.system(size: fontSize, weight: .medium))
-                            .foregroundColor(Theme.noteText)
+                        Text(notes.contains(digit) || struck.contains(digit) ? "\(digit)" : "")
+                            .font(.system(size: fontSize, weight: struck.contains(digit) ? .bold : .medium))
+                            .strikethrough(struck.contains(digit), color: Theme.danger)
+                            .foregroundColor(struck.contains(digit) ? Theme.danger : Theme.noteText)
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }

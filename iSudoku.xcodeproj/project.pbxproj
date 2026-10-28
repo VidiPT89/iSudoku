@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		014430511891DE871A77D550 /* AcademyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8456664151AEDB64134534 /* AcademyScreen.swift */; };
 		06AB9ABFE19F3BC05468B5CC /* PrivacyInfo.xcprivacy in Resources */ = {isa = PBXBuildFile; fileRef = DB10216B7FD00C99A9B4682E /* PrivacyInfo.xcprivacy */; };
 		074B2DBCABE72F2EBE3CA2D4 /* iSudokuApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 88E1AAE334BFDEFA9F5732AD /* iSudokuApp.swift */; };
 		0A77B78AABCEC284FF876F29 /* NumberPadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC9E871C25817BC05883A50 /* NumberPadView.swift */; };
@@ -21,14 +22,19 @@
 		41BB8EE283799245096CA292 /* Techniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4170EFED883F926D4C2E0BD /* Techniques.swift */; };
 		4543421C783F6B451A586504 /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E8FAC7740288250F98313A /* HowToPlayView.swift */; };
 		4669C1C4A4ABEEDACF92F866 /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA245ACF50F838181EDC2CE1 /* Theme.swift */; };
+		56F0B60662C3DBC4A1FA6CDB /* LocalizationAcademy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8110FD382B9BB04B1FB3D2EE /* LocalizationAcademy.swift */; };
 		58B2A401328033012E54FECE /* Techniques.swift in Sources */ = {isa = PBXBuildFile; fileRef = F4170EFED883F926D4C2E0BD /* Techniques.swift */; };
 		5A673693A8A374F923EC9FDD /* NumberPadView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0CC9E871C25817BC05883A50 /* NumberPadView.swift */; };
 		5BC670AD6E07B3DF2495A4DB /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F947EC5C19777478034EE8BC /* SoundManager.swift */; };
+		6528506B8A7ECA4CD3A7235A /* Academy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26DDC72C9B2FF80E9967D58 /* Academy.swift */; };
 		66872124209380454D22C0CC /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C562933BB2C04E0FEFB0E181 /* GameEngine.swift */; };
 		68684040E68EE46EA5B3E3A9 /* Challenge.swift in Sources */ = {isa = PBXBuildFile; fileRef = BFFA62E912671DD178243E35 /* Challenge.swift */; };
 		6BC4E3F6D9B9C9D5AA8FF7C9 /* BackgroundGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E282A9A69843204872E9AA5F /* BackgroundGlow.swift */; };
 		799A322AAC6B33F213978802 /* SudokuCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DEC92C534C453FABD442F72 /* SudokuCell.swift */; };
+		7D2F45E409E75039BD489813 /* LessonDrillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE74FAA98EB9E6FE78716968 /* LessonDrillView.swift */; };
+		7EFFF2666243EA22709438D5 /* AcademyScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 7F8456664151AEDB64134534 /* AcademyScreen.swift */; };
 		7F251C987E49387AAAE7CA6D /* HowToPlayView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 59E8FAC7740288250F98313A /* HowToPlayView.swift */; };
+		821973C0BA31F46DA5FC9757 /* LessonDrillView.swift in Sources */ = {isa = PBXBuildFile; fileRef = AE74FAA98EB9E6FE78716968 /* LessonDrillView.swift */; };
 		824638975F2459813C93B01D /* SudokuGridView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 576CA4043917D8E096FC4F62 /* SudokuGridView.swift */; };
 		84BF22AA8D541A4D931C2211 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 87AEE968E4F2F7A2DD78A250 /* Assets.xcassets */; };
 		8E48C5F949E45A900E414997 /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 48DFC7B1911B39BA6F9A2F73 /* RootView.swift */; };
@@ -38,9 +44,11 @@
 		930B1C3F0BFA5A2F217FA5FC /* GameEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = C562933BB2C04E0FEFB0E181 /* GameEngine.swift */; };
 		947DEEEE139B51936559FCE3 /* ChallengesScreen.swift in Sources */ = {isa = PBXBuildFile; fileRef = 6FFBDE2BF8CFAAE5F3C45A5C /* ChallengesScreen.swift */; };
 		9F844482FE30D95CA407528D /* SudokuGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDE9E7D561FF305E39838B16 /* SudokuGenerator.swift */; };
+		A7E4637F25997BEE34FD0EE8 /* LocalizationAcademy.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8110FD382B9BB04B1FB3D2EE /* LocalizationAcademy.swift */; };
 		ABED97413128D9478E9286ED /* Theme.swift in Sources */ = {isa = PBXBuildFile; fileRef = FA245ACF50F838181EDC2CE1 /* Theme.swift */; };
 		AFF4564B26325F7E8B6BE71B /* SoundManager.swift in Sources */ = {isa = PBXBuildFile; fileRef = F947EC5C19777478034EE8BC /* SoundManager.swift */; };
 		B3D935DF250ED565E097CCC3 /* BackgroundGlow.swift in Sources */ = {isa = PBXBuildFile; fileRef = E282A9A69843204872E9AA5F /* BackgroundGlow.swift */; };
+		B77488AC2534AB281C8A173A /* Academy.swift in Sources */ = {isa = PBXBuildFile; fileRef = B26DDC72C9B2FF80E9967D58 /* Academy.swift */; };
 		C18A41D516D60E64DBCDF5D4 /* SudokuGenerator.swift in Sources */ = {isa = PBXBuildFile; fileRef = BDE9E7D561FF305E39838B16 /* SudokuGenerator.swift */; };
 		D588AF7F2F3AC7B2EE4C77C3 /* SudokuCell.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2DEC92C534C453FABD442F72 /* SudokuCell.swift */; };
 		D5A63C9F4060A01E9A4D15FD /* SudokuSolver.swift in Sources */ = {isa = PBXBuildFile; fileRef = 343F431A2F71B9D32E80B05D /* SudokuSolver.swift */; };
@@ -67,12 +75,16 @@
 		576CA4043917D8E096FC4F62 /* SudokuGridView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuGridView.swift; sourceTree = "<group>"; };
 		59E8FAC7740288250F98313A /* HowToPlayView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HowToPlayView.swift; sourceTree = "<group>"; };
 		6FFBDE2BF8CFAAE5F3C45A5C /* ChallengesScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ChallengesScreen.swift; sourceTree = "<group>"; };
+		7F8456664151AEDB64134534 /* AcademyScreen.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AcademyScreen.swift; sourceTree = "<group>"; };
+		8110FD382B9BB04B1FB3D2EE /* LocalizationAcademy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LocalizationAcademy.swift; sourceTree = "<group>"; };
 		87AEE968E4F2F7A2DD78A250 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
 		88E1AAE334BFDEFA9F5732AD /* iSudokuApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = iSudokuApp.swift; sourceTree = "<group>"; };
 		8F60A27755E0947F8AF7EFC5 /* GameView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GameView.swift; sourceTree = "<group>"; };
 		910A3ED848AA90F07D1C860E /* iSudoku-iOS.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = "iSudoku-iOS.app"; sourceTree = BUILT_PRODUCTS_DIR; };
 		9763DC981C8564C43799B428 /* Localization.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Localization.swift; sourceTree = "<group>"; };
 		A480C1F09716C30AFF364F68 /* Leaderboard.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Leaderboard.swift; sourceTree = "<group>"; };
+		AE74FAA98EB9E6FE78716968 /* LessonDrillView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LessonDrillView.swift; sourceTree = "<group>"; };
+		B26DDC72C9B2FF80E9967D58 /* Academy.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Academy.swift; sourceTree = "<group>"; };
 		BD46A49696AFAA08E9C56453 /* MainMenuView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MainMenuView.swift; sourceTree = "<group>"; };
 		BDE9E7D561FF305E39838B16 /* SudokuGenerator.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SudokuGenerator.swift; sourceTree = "<group>"; };
 		BFFA62E912671DD178243E35 /* Challenge.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Challenge.swift; sourceTree = "<group>"; };
@@ -90,10 +102,12 @@
 		26CC943037FE57FE4CE99D97 /* Views */ = {
 			isa = PBXGroup;
 			children = (
+				7F8456664151AEDB64134534 /* AcademyScreen.swift */,
 				E282A9A69843204872E9AA5F /* BackgroundGlow.swift */,
 				6FFBDE2BF8CFAAE5F3C45A5C /* ChallengesScreen.swift */,
 				8F60A27755E0947F8AF7EFC5 /* GameView.swift */,
 				59E8FAC7740288250F98313A /* HowToPlayView.swift */,
+				AE74FAA98EB9E6FE78716968 /* LessonDrillView.swift */,
 				BD46A49696AFAA08E9C56453 /* MainMenuView.swift */,
 				2A5FB121A27D064E89E6C8EE /* Modals.swift */,
 				0CC9E871C25817BC05883A50 /* NumberPadView.swift */,
@@ -132,6 +146,7 @@
 		9D8EBBEEC7D12636D5E6FABB /* Engine */ = {
 			isa = PBXGroup;
 			children = (
+				B26DDC72C9B2FF80E9967D58 /* Academy.swift */,
 				BFFA62E912671DD178243E35 /* Challenge.swift */,
 				C562933BB2C04E0FEFB0E181 /* GameEngine.swift */,
 				A480C1F09716C30AFF364F68 /* Leaderboard.swift */,
@@ -150,6 +165,7 @@
 				87AEE968E4F2F7A2DD78A250 /* Assets.xcassets */,
 				88E1AAE334BFDEFA9F5732AD /* iSudokuApp.swift */,
 				9763DC981C8564C43799B428 /* Localization.swift */,
+				8110FD382B9BB04B1FB3D2EE /* LocalizationAcademy.swift */,
 				DB10216B7FD00C99A9B4682E /* PrivacyInfo.xcprivacy */,
 				FA245ACF50F838181EDC2CE1 /* Theme.swift */,
 				9D8EBBEEC7D12636D5E6FABB /* Engine */,
@@ -263,6 +279,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6528506B8A7ECA4CD3A7235A /* Academy.swift in Sources */,
+				7EFFF2666243EA22709438D5 /* AcademyScreen.swift in Sources */,
 				B3D935DF250ED565E097CCC3 /* BackgroundGlow.swift in Sources */,
 				68684040E68EE46EA5B3E3A9 /* Challenge.swift in Sources */,
 				2FE7748D3E8AFC71FA3C76A2 /* ChallengesScreen.swift in Sources */,
@@ -270,7 +288,9 @@
 				8FF06883F4F936E41482401E /* GameView.swift in Sources */,
 				7F251C987E49387AAAE7CA6D /* HowToPlayView.swift in Sources */,
 				D5EC8820551AFCBC6CB16722 /* Leaderboard.swift in Sources */,
+				821973C0BA31F46DA5FC9757 /* LessonDrillView.swift in Sources */,
 				14B3EB952239270756285E9D /* Localization.swift in Sources */,
+				A7E4637F25997BEE34FD0EE8 /* LocalizationAcademy.swift in Sources */,
 				36F6911934EA9C1383A31F69 /* MainMenuView.swift in Sources */,
 				DDDD32E71C941415F5778883 /* Modals.swift in Sources */,
 				5A673693A8A374F923EC9FDD /* NumberPadView.swift in Sources */,
@@ -292,6 +312,8 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				B77488AC2534AB281C8A173A /* Academy.swift in Sources */,
+				014430511891DE871A77D550 /* AcademyScreen.swift in Sources */,
 				6BC4E3F6D9B9C9D5AA8FF7C9 /* BackgroundGlow.swift in Sources */,
 				F52D5F0C0BAD42F4D372C25E /* Challenge.swift in Sources */,
 				947DEEEE139B51936559FCE3 /* ChallengesScreen.swift in Sources */,
@@ -299,7 +321,9 @@
 				2B616928C36B797833D9510F /* GameView.swift in Sources */,
 				4543421C783F6B451A586504 /* HowToPlayView.swift in Sources */,
 				FEA754F8EAD7F9036EF92466 /* Leaderboard.swift in Sources */,
+				7D2F45E409E75039BD489813 /* LessonDrillView.swift in Sources */,
 				8E7F608992A4E591FB91C094 /* Localization.swift in Sources */,
+				56F0B60662C3DBC4A1FA6CDB /* LocalizationAcademy.swift in Sources */,
 				8EFE1D6357B4036B196AC258 /* MainMenuView.swift in Sources */,
 				20D7BC1AB5C60B23D3C5F4DB /* Modals.swift in Sources */,
 				0A77B78AABCEC284FF876F29 /* NumberPadView.swift in Sources */,
@@ -436,7 +460,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = S769436W24;
 				ENABLE_NS_ASSERTIONS = NO;
@@ -493,7 +517,7 @@
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = S769436W24;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;

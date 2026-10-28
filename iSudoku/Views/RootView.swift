@@ -1,7 +1,7 @@
 import SwiftUI
 
 enum AppScreen {
-    case splash, menu, howToPlay, game, levels
+    case splash, menu, howToPlay, game, levels, academy, lesson
 }
 
 final class DifficultyStore: ObservableObject {
@@ -25,6 +25,10 @@ struct RootView: View {
     @State private var screen: AppScreen = .splash
     @State private var hasSave = SaveStore.hasSave()
     @State private var challengeProgress = ChallengeStore().load()
+    @State private var academyProgress = AcademyStore().load()
+    @State private var lesson: Lesson = .hiddenSingle
+    /// Where the lesson's back button goes: the Academy, or the game whose hint opened it.
+    @State private var lessonReturn: AppScreen = .academy
 
     private let challengeStore = ChallengeStore()
 
@@ -40,6 +44,7 @@ struct RootView: View {
                     onPlay: { startNewGame() },
                     onContinue: { continueGame() },
                     onChallenges: { openLevels() },
+                    onAcademy: { openAcademy() },
                     onHowToPlay: { withAnimation(Theme.ease) { screen = .howToPlay } }
                 )
             case .howToPlay:
@@ -50,6 +55,19 @@ struct RootView: View {
                     onBack: { withAnimation(Theme.ease) { screen = .menu } },
                     onPickLevel: { startChallenge($0) }
                 )
+            case .academy:
+                AcademyScreen(
+                    progress: academyProgress,
+                    onBack: { withAnimation(Theme.ease) { screen = .menu } },
+                    onPickLesson: { openLesson($0, returnTo: .academy) }
+                )
+            case .lesson:
+                LessonDrillView(
+                    lesson: lesson,
+                    onBack: { withAnimation(Theme.ease) { screen = lessonReturn } },
+                    onProgress: { academyProgress = $0 }
+                )
+                .id(lesson)
             case .game:
                 GameView(
                     engine: engine,
@@ -68,7 +86,8 @@ struct RootView: View {
                     onChallengeWin: { _, _, _ in
                         // GameView already persisted via ChallengeStore; just refresh our copy.
                         challengeProgress = challengeStore.load()
-                    }
+                    },
+                    onPractise: { openLesson($0, returnTo: .game) }
                 )
             }
         }
@@ -100,6 +119,17 @@ struct RootView: View {
         hasSave = SaveStore.hasSave()
         challengeProgress = challengeStore.load()
         withAnimation(Theme.ease) { screen = .levels }
+    }
+
+    private func openAcademy() {
+        academyProgress = AcademyStore().load()
+        withAnimation(Theme.ease) { screen = .academy }
+    }
+
+    private func openLesson(_ picked: Lesson, returnTo: AppScreen) {
+        lesson = picked
+        lessonReturn = returnTo
+        withAnimation(Theme.ease) { screen = .lesson }
     }
 
     private func startChallenge(_ level: Int) {

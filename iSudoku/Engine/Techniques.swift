@@ -64,6 +64,14 @@ enum Techniques {
 
     /// First elimination up to `level` that removes at least one candidate, simplest first.
     static func findElimination(_ masks: [Int], level: TechniqueLevel = .xWing) -> Elimination? {
+        var first: Elimination?
+        forEachElimination(masks, level: level) { first = $0; return true }
+        return first
+    }
+
+    /// Every elimination up to `level` that removes at least one candidate, simplest first;
+    /// `body` returns true to stop early.
+    static func forEachElimination(_ masks: [Int], level: TechniqueLevel = .xWing, _ body: (Elimination) -> Bool) {
         // Pointing: a box's candidates for a digit all sit on one row or column.
         for b in 0..<9 {
             let box = SudokuUnit.table[.box]![b]
@@ -76,8 +84,8 @@ enum Techniques {
                     let line = SudokuUnit(kind: kind, index: seen.trailingZeroBitCount)
                     let cut = line.cells.filter { boxOfCell[$0] != b && masks[$0] & bit != 0 }.map { Elimination.Removal(index: $0, bits: bit) }
                     if !cut.isEmpty {
-                        return Elimination(kind: .pointing, digits: [d], source: SudokuUnit(kind: .box, index: b), target: line,
-                                           cells: box.filter { masks[$0] & bit != 0 }, removals: cut)
+                        if body(Elimination(kind: .pointing, digits: [d], source: SudokuUnit(kind: .box, index: b), target: line,
+                                            cells: box.filter { masks[$0] & bit != 0 }, removals: cut)) { return }
                     }
                 }
             }
@@ -95,8 +103,8 @@ enum Techniques {
                     let box = SudokuUnit(kind: .box, index: boxesSeen.trailingZeroBitCount)
                     let cut = box.cells.filter { lineOf[$0] != n && masks[$0] & bit != 0 }.map { Elimination.Removal(index: $0, bits: bit) }
                     if !cut.isEmpty {
-                        return Elimination(kind: .claiming, digits: [d], source: SudokuUnit(kind: kind, index: n), target: box,
-                                           cells: line.filter { masks[$0] & bit != 0 }, removals: cut)
+                        if body(Elimination(kind: .claiming, digits: [d], source: SudokuUnit(kind: kind, index: n), target: box,
+                                            cells: line.filter { masks[$0] & bit != 0 }, removals: cut)) { return }
                     }
                 }
             }
@@ -112,18 +120,18 @@ enum Techniques {
                             .map { Elimination.Removal(index: $0, bits: masks[$0] & pairMask) }
                         if !cut.isEmpty {
                             let unit = SudokuUnit(kind: kind, index: n)
-                            return Elimination(kind: .pair, digits: digits(of: pairMask), source: unit, target: unit, cells: [cells[a], cells[b]], removals: cut)
+                            if body(Elimination(kind: .pair, digits: digits(of: pairMask), source: unit, target: unit, cells: [cells[a], cells[b]], removals: cut)) { return }
                         }
                     }
                 }
             }
         }
-        return level >= .xWing ? findXWing(masks) : nil
+        if level >= .xWing { forEachXWing(masks, body) }
     }
 
     /// X-Wing: in two base lines a digit fits only on the same two cover lines, so it leaves the
     /// rest of those cover lines.
-    private static func findXWing(_ masks: [Int]) -> Elimination? {
+    private static func forEachXWing(_ masks: [Int], _ body: (Elimination) -> Bool) {
         for (baseKind, coverKind) in [(SudokuUnit.Kind.row, SudokuUnit.Kind.col), (.col, .row)] {
             let lines = SudokuUnit.table[baseKind]!
             for d in 1...9 {
@@ -138,15 +146,14 @@ enum Techniques {
                             .filter { !cells.contains($0) && masks[$0] & bit != 0 }
                             .map { Elimination.Removal(index: $0, bits: bit) }
                         if !cut.isEmpty {
-                            return Elimination(kind: .xWing, digits: [d], source: SudokuUnit(kind: baseKind, index: a),
-                                               target: SudokuUnit(kind: coverKind, index: cover[0]), cells: cells, removals: cut,
-                                               base: [a, b], cover: cover)
+                            if body(Elimination(kind: .xWing, digits: [d], source: SudokuUnit(kind: baseKind, index: a),
+                                                target: SudokuUnit(kind: coverKind, index: cover[0]), cells: cells, removals: cut,
+                                                base: [a, b], cover: cover)) { return }
                         }
                     }
                 }
             }
         }
-        return nil
     }
 
     static func apply(_ elimination: Elimination, to masks: inout [Int]) {

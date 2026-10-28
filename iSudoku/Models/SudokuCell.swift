@@ -4,6 +4,8 @@ struct SudokuCell {
     var isGiven: Bool = false
     var value: Int?
     var notes: Set<Int> = []
+    /// Academy only: candidates an elimination just removed, drawn struck through.
+    var struckNotes: Set<Int> = []
     var isConflict: Bool = false
 
     var boxIndex: Int { (row / 3) * 3 + (col / 3) }

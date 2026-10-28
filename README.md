@@ -11,6 +11,8 @@
 - ✏️ Pencil-mark notes mode — jot down candidate digits in a cell instead of committing a final value
 - 🚫 Live conflict detection — placing a digit that already exists in the same row, column or 3x3 box highlights every conflicting cell
 - 💡 Two-step teaching hints: the first tap gives a free **clue** — where to look, without filling anything; the second tap (**Reveal**, 3/4/5 per game by difficulty) fills the cell and explains the deduction. A wrong digit is fixed first; otherwise the hint uses the simplest technique that works — a single (only one cell for a digit in a box/row/column, or only one digit for a cell), exposed when needed by **pointing** or **claiming** candidates, a **naked pair** or, the hardest, an **X-Wing** — and shows only the elimination steps that single actually needs
+- 🎓 **Technique Academy** — six lessons (hidden single, naked single, pointing, claiming, naked pair, X-Wing), each drilled on positions taken from freshly generated puzzles with every candidate shown. Place the single or pick a candidate the technique removes; any valid instance on the board counts, misses get a specific explanation, "Show me" reveals one with the pattern highlighted and the removed candidates struck through. Drills solved first try build a 5-step mastery meter per technique, and the lesson list flags the next one to learn
+- 🔗 Hints link to practice — when a hint uses a technique, "Practise this technique" opens that Academy lesson and Back returns to the game
 - 🧠 Difficulty graded by human technique, never by guessing: Easy and Medium are solvable with singles alone; Hard always needs pointing/claiming candidates or naked pairs, and those are always enough; expert challenge levels are always solvable by logic up to X-Wing
 - ↩️ Undo for the last 200 moves, including after resuming a saved game
 - 🎬 Smooth SwiftUI animations on digit entry and hint reveal
@@ -46,6 +48,7 @@ iSudoku/
 │   │   ├── SudokuGenerator.swift # Randomized full-grid fill + hole digging
 │   │   ├── SudokuSolver.swift     # Bitmask MRV solution counter and conflict scan
 │   │   ├── Techniques.swift       # Human techniques: singles, pointing/claiming, naked pairs, X-Wing, grading
+│   │   ├── Academy.swift          # Lessons, drill generation/checking, mastery progress (UserDefaults)
 │   │   ├── GameEngine.swift        # Board state, dispatch results, undo stack, hints
 │   │   ├── SaveStore.swift          # Mid-game autosave/restore (UserDefaults)
 │   │   ├── Leaderboard.swift         # Local best time/hints per difficulty (UserDefaults)
@@ -56,6 +59,8 @@ iSudoku/
 │   │   ├── MainMenuView.swift      # Menu, difficulty picker, language toggle
 │   │   ├── HowToPlayView.swift      # Rules guide with a visual grid diagram
 │   │   ├── GameView.swift            # Board screen, stats, actions, modals
+│   │   ├── AcademyScreen.swift        # Lesson list with tiers and mastery
+│   │   ├── LessonDrillView.swift      # One lesson: idea, drill board, feedback
 │   │   ├── SudokuGridView.swift       # 9x9 grid rendering, cell/box borders, highlighting
 │   │   ├── NumberPadView.swift         # Digit entry pad + erase
 │   │   ├── Modals.swift                 # Win / confirm modals + leaderboard block

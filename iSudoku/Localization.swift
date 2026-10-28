@@ -27,30 +27,34 @@ final class Localization: ObservableObject {
     }
 
     func t(_ key: String) -> String {
-        strings[lang]?[key] ?? key
+        strings[lang]?[key] ?? academyStrings[lang]?[key] ?? key
+    }
+
+    func fill(_ key: String, _ values: [String: String]) -> String {
+        values.reduce(t(key)) { $0.replacingOccurrences(of: "{\($1.key)}", with: $1.value) }
+    }
+
+    /// One sentence explaining an elimination, shared by hints and Academy drills.
+    func eliminationText(_ e: Elimination) -> String {
+        func line(_ unit: SudokuUnit) -> String { fill(unit.kind == .row ? "lineRow" : "lineCol", ["n": "\(unit.index + 1)"]) }
+        func cellRef(_ i: Int) -> String { fill("cellRef", ["r": "\(i / 9 + 1)", "c": "\(i % 9 + 1)"]) }
+        switch e.kind {
+        case .pointing: return fill("elimPointing", ["b": "\(e.source.index + 1)", "d": "\(e.digits[0])", "line": line(e.target)])
+        case .claiming: return fill("elimClaiming", ["b": "\(e.target.index + 1)", "d": "\(e.digits[0])", "line": line(e.source)])
+        case .xWing:
+            return fill(e.source.kind == .row ? "elimXWingRows" : "elimXWingCols",
+                        ["a": "\(e.base[0] + 1)", "b": "\(e.base[1] + 1)", "d": "\(e.digits[0])", "x": "\(e.cover[0] + 1)", "y": "\(e.cover[1] + 1)"])
+        case .pair:
+            let ofKey = e.source.kind == .row ? "ofRow" : e.source.kind == .col ? "ofCol" : "ofBox"
+            return fill("elimPair", ["cells": e.cells.map(cellRef).joined(separator: t("and")),
+                                     "a": "\(e.digits[0])", "e": "\(e.digits[1])", "of": fill(ofKey, ["n": "\(e.source.index + 1)"])])
+        }
     }
 
     /// Hint panel text: the elimination steps, then either the clue (where to look) or, once
     /// revealed, the deduction that fills the cell. One sentence per line.
     func hintExplanation(_ hint: HintPlan) -> String {
-        func fill(_ key: String, _ values: [String: String]) -> String {
-            values.reduce(t(key)) { $0.replacingOccurrences(of: "{\($1.key)}", with: $1.value) }
-        }
-        func line(_ unit: SudokuUnit) -> String { fill(unit.kind == .row ? "lineRow" : "lineCol", ["n": "\(unit.index + 1)"]) }
-        func cellRef(_ i: Int) -> String { fill("cellRef", ["r": "\(i / 9 + 1)", "c": "\(i % 9 + 1)"]) }
-        var lines = hint.eliminations.map { e -> String in
-            switch e.kind {
-            case .pointing: return fill("elimPointing", ["b": "\(e.source.index + 1)", "d": "\(e.digits[0])", "line": line(e.target)])
-            case .claiming: return fill("elimClaiming", ["b": "\(e.target.index + 1)", "d": "\(e.digits[0])", "line": line(e.source)])
-            case .xWing:
-                return fill(e.source.kind == .row ? "elimXWingRows" : "elimXWingCols",
-                            ["a": "\(e.base[0] + 1)", "b": "\(e.base[1] + 1)", "d": "\(e.digits[0])", "x": "\(e.cover[0] + 1)", "y": "\(e.cover[1] + 1)"])
-            case .pair:
-                let ofKey = e.source.kind == .row ? "ofRow" : e.source.kind == .col ? "ofCol" : "ofBox"
-                return fill("elimPair", ["cells": e.cells.map(cellRef).joined(separator: t("and")),
-                                         "a": "\(e.digits[0])", "e": "\(e.digits[1])", "of": fill(ofKey, ["n": "\(e.source.index + 1)"])])
-            }
-        }
+        var lines = hint.eliminations.map(eliminationText)
         let prefix = hint.revealed ? "hint" : "clue"
         let key: String
         switch hint.technique {
@@ -74,8 +78,8 @@ final class Localization: ObservableObject {
             "developedBy": "Desenvolvido por",
             "privacy": "Política de Privacidade",
 
-            "menuTag": "PUZZLE DE LÓGICA",
-            "menuSubtitle": "Preenche a grelha 9x9. Sem repetições em linhas, colunas ou blocos.",
+            "menuTag": "APRENDE A RESOLVER",
+            "menuSubtitle": "Joga Sudoku e aprende as técnicas dos especialistas, com dicas que explicam cada passo.",
             "play": "Jogar",
             "continueGame": "Continuar",
             "howToPlay": "Como Jogar",
@@ -174,8 +178,8 @@ final class Localization: ObservableObject {
             "developedBy": "Developed by",
             "privacy": "Privacy Policy",
 
-            "menuTag": "LOGIC PUZZLE",
-            "menuSubtitle": "Fill the 9x9 grid. No repeats in any row, column or box.",
+            "menuTag": "LEARN TO SOLVE",
+            "menuSubtitle": "Play Sudoku and learn the techniques experts use, with hints that explain every step.",
             "play": "Play",
             "continueGame": "Continue",
             "howToPlay": "How to Play",
